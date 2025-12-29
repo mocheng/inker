@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
+import Progress from './Progress.js';
 
 export default function App() {
   const [history, setHistory] = useState<string[]>([]);
   const [input, setInput] = useState('');
+  const [pendingInput, setPendingInput] = useState<string | null>(null);
 
   const historyElements = useMemo(
     () => history.flatMap((text, i) => [
@@ -16,8 +18,14 @@ export default function App() {
 
   const handleSubmit = () => {
     if (input.trim()) {
-      setHistory([...history, input]);
+      setPendingInput(input);
       setInput('');
+      setTimeout(() => {
+        setPendingInput(prev => {
+          if (prev) setHistory(h => [...h, prev]);
+          return null;
+        });
+      }, 3000);
     }
   };
 
@@ -30,6 +38,12 @@ export default function App() {
   return (
     <Box flexDirection="column">
       {historyElements}
+      {pendingInput && (
+        <Box flexDirection="column">
+          <Text color="green">{pendingInput}</Text>
+          <Progress key={pendingInput} />
+        </Box>
+      )}
       <Box>
         <Text>&gt; </Text>
         <TextInput value={input} onChange={setInput} onSubmit={handleSubmit} />
