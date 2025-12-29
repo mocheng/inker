@@ -12,5 +12,5 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  return <Text>Counter: {counter}</Text>;
+  return <Text color="green">Counter: {counter}</Text>;
 }
