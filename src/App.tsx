@@ -1,16 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { Text } from 'ink';
+import React, { useState, useMemo } from 'react';
+import { Box, Text, useInput } from 'ink';
+import TextInput from 'ink-text-input';
 
 export default function App() {
-  const [counter, setCounter] = useState(0);
+  const [history, setHistory] = useState<string[]>([]);
+  const [input, setInput] = useState('');
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCounter(c => c + 1);
-    }, 100);
+  const historyElements = useMemo(
+    () => history.flatMap((text, i) => [
+      <Text key={`${i}-input`} color="green">{text}</Text>,
+      <Text key={`${i}-response`}>what's next?</Text>
+    ]),
+    [history]
+  );
 
-    return () => clearInterval(timer);
-  }, []);
+  const handleSubmit = () => {
+    if (input.trim()) {
+      setHistory([...history, input]);
+      setInput('');
+    }
+  };
 
-  return <Text color="green">Counter: {counter}</Text>;
+  useInput((input, key) => {
+    if (key.return) {
+      handleSubmit();
+    }
+  });
+
+  return (
+    <Box flexDirection="column">
+      {historyElements}
+      <Box>
+        <Text>&gt; </Text>
+        <TextInput value={input} onChange={setInput} onSubmit={handleSubmit} />
+      </Box>
+    </Box>
+  );
 }
