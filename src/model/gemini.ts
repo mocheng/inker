@@ -1,7 +1,8 @@
-import { igniteModel, loadModels, Message } from 'multi-llm-ts';
+import { igniteModel, loadModels, Message, logger } from 'multi-llm-ts';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ quiet: true });
+logger.disable(); // necessary, otherwise logging will screw up the CLI output
 
 export async function sendMessage(message: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
