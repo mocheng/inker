@@ -44,7 +44,7 @@ export default function App() {
           <Progress key={pendingInput} />
         </Box>
       )}
-      <Box>
+      <Box borderStyle="round" borderColor="cyan" paddingX={1}>
         <Text>&gt; </Text>
         <TextInput value={input} onChange={setInput} onSubmit={handleSubmit} />
       </Box>
