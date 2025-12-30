@@ -5,6 +5,7 @@
     "moduleResolution": "bundler",
     "jsx": "react",
     "jsxFactory": "React.createElement",
+    "rootDir": "./src",
     "outDir": "./dist",
     "esModuleInterop": true,
     "strict": true

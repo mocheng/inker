@@ -2,10 +2,10 @@
   "name": "inker",
   "version": "0.0.1",
   "type": "module",
-  "bin": "./dist/cli.js",
+  "bin": "./dist/cli/main.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/cli.js"
+    "start": "node dist/cli/main.js"
   },
   "dependencies": {
     "ink": "^6.6.0",
