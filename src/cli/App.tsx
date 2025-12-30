@@ -2,30 +2,47 @@ import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import Progress from './Progress.js';
+import { sendMessage } from '../model/gemini.js';
+
+type HistoryItem = {
+  type: 'user' | 'assistant' | 'error';
+  text: string;
+};
 
 export default function App() {
-  const [history, setHistory] = useState<string[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [input, setInput] = useState('');
-  const [pendingInput, setPendingInput] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const historyElements = useMemo(
-    () => history.flatMap((text, i) => [
-      <Text key={`${i}-input`} color="green">{text}</Text>,
-      <Text key={`${i}-response`}>what's next?</Text>
-    ]),
+    () => history.map((item, i) => {
+      if (item.type === 'user') {
+        return <Text key={i} color="green">{item.text}</Text>;
+      } else if (item.type === 'error') {
+        return <Text key={i} color="red">{item.text}</Text>;
+      } else {
+        return <Text key={i}>{item.text}</Text>;
+      }
+    }),
     [history]
   );
 
-  const handleSubmit = () => {
-    if (input.trim()) {
-      setPendingInput(input);
+  const handleSubmit = async () => {
+    if (input.trim() && !isLoading) {
+      const userMessage = input;
       setInput('');
-      setTimeout(() => {
-        setPendingInput(prev => {
-          if (prev) setHistory(h => [...h, prev]);
-          return null;
-        });
-      }, 3000);
+      setHistory(prev => [...prev, { type: 'user', text: userMessage }]);
+      setIsLoading(true);
+
+      try {
+        const response = await sendMessage(userMessage);
+        setHistory(prev => [...prev, { type: 'assistant', text: response }]);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        setHistory(prev => [...prev, { type: 'error', text: `Error: ${errorMsg}` }]);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -38,12 +55,7 @@ export default function App() {
   return (
     <Box flexDirection="column">
       {historyElements}
-      {pendingInput && (
-        <Box flexDirection="column">
-          <Text color="green">{pendingInput}</Text>
-          <Progress key={pendingInput} />
-        </Box>
-      )}
+      {isLoading && <Progress />}
       <Box borderStyle="round" borderColor="cyan" paddingX={1}>
         <Text>&gt; </Text>
         <TextInput value={input} onChange={setInput} onSubmit={handleSubmit} />
