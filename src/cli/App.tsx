@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
 import Progress from './Progress.js';
 import { sendMessage } from '../model/gemini.js';
@@ -45,12 +45,6 @@ export default function App() {
       }
     }
   };
-
-  useInput((input, key) => {
-    if (key.return) {
-      handleSubmit();
-    }
-  });
 
   return (
     <Box flexDirection="column">
