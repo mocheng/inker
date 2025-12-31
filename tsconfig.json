@@ -5,6 +5,7 @@
     "moduleResolution": "bundler",
     "jsx": "react",
     "jsxFactory": "React.createElement",
+    "jsxFragmentFactory": "React.Fragment",
     "rootDir": "./src",
     "outDir": "./dist",
     "esModuleInterop": true,
