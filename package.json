@@ -16,7 +16,8 @@
     "ink-text-input": "^6.0.0",
     "lodash-es": "^4.17.22",
     "multi-llm-ts": "^4.6.2",
-    "react": "^19.2.3"
+    "react": "^19.2.3",
+    "toml": "^3.0.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.1",
