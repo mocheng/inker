@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Box, Text, Static, useStdout, measureElement } from 'ink';
+import { Box, Text, Static, useStdout, measureElement, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import Progress from './Progress.js';
 import HistoryItem from './HistoryItem.js';
@@ -13,13 +13,38 @@ export default function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingId, setStreamingId] = useState<number | null>(null);
+  const [inputHistory, setInputHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [inputKey, setInputKey] = useState(0);
   const streamingRef = useRef<any>(null);
   const { stdout } = useStdout();
   const terminalHeight = stdout?.rows || 24;
 
+  useInput((input, key) => {
+    if (key.upArrow && inputHistory.length > 0) {
+      const newIndex = historyIndex < inputHistory.length - 1 ? historyIndex + 1 : historyIndex;
+      setHistoryIndex(newIndex);
+      setInput(inputHistory[inputHistory.length - 1 - newIndex]);
+      setInputKey(prev => prev + 1);
+    } else if (key.downArrow) {
+      if (historyIndex > 0) {
+        const newIndex = historyIndex - 1;
+        setHistoryIndex(newIndex);
+        setInput(inputHistory[inputHistory.length - 1 - newIndex]);
+        setInputKey(prev => prev + 1);
+      } else if (historyIndex === 0) {
+        setHistoryIndex(-1);
+        setInput('');
+        setInputKey(prev => prev + 1);
+      }
+    }
+  });
+
   const handleSubmit = async () => {
     if (input.trim() && !isLoading) {
       const userMessage = input;
+      setInputHistory(prev => [...prev, userMessage]);
+      setHistoryIndex(-1);
       setInput('');
       setHistory(prev => [...prev, { id: nextMessageId++, type: 'user', text: userMessage }]);
       setIsLoading(true);
@@ -102,7 +127,13 @@ export default function App() {
       {isLoading && <Progress key="progress" />}
       <Box borderStyle="round" borderColor="cyan" paddingX={1}>
         <Text>&gt; </Text>
-        <TextInput value={input} onChange={setInput} onSubmit={handleSubmit} />
+        <TextInput 
+          key={inputKey}
+          value={input} 
+          onChange={setInput} 
+          onSubmit={handleSubmit}
+          showCursor={true}
+        />
       </Box>
     </>
   );
