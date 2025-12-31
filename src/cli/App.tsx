@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Box, Text, Static, useInput, useStdout, measureElement } from 'ink';
+import { Box, Text, Static, useStdout, measureElement } from 'ink';
+import TextInput from 'ink-text-input';
 import Progress from './Progress.js';
 import HistoryItem from './HistoryItem.js';
 import { sendMessage } from '../model/gemini.js';
@@ -85,16 +86,6 @@ export default function App() {
     }
   };
 
-  useInput((character, key) => {
-    if (key.return) {
-      handleSubmit();
-    } else if (key.backspace || key.delete) {
-      setInput(current => current.slice(0, -1));
-    } else {
-      setInput(current => current + character);
-    }
-  });
-
   const completedHistory = history.filter(item => item.id !== streamingId);
   const streamingItem = history.find(item => item.id === streamingId);
 
@@ -110,7 +101,8 @@ export default function App() {
       )}
       {isLoading && <Progress key="progress" />}
       <Box borderStyle="round" borderColor="cyan" paddingX={1}>
-        <Text>{terminalHeight}</Text><Text>&gt; {input}</Text>
+        <Text>&gt; </Text>
+        <TextInput value={input} onChange={setInput} onSubmit={handleSubmit} />
       </Box>
     </>
   );
