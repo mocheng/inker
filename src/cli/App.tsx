@@ -4,6 +4,7 @@ import TextInput from 'ink-text-input';
 import Progress from './Progress.js';
 import HistoryItem from './HistoryItem.js';
 import { sendMessage } from '../model/gemini.js';
+import { convertToLLMMessages } from '../model/context.js';
 import { loadInputHistory, saveInputHistory } from './inputHistory.js';
 import type { Message } from './types.js';
 
@@ -63,7 +64,8 @@ export default function App() {
 
       try {
         let fullText = '';
-        await sendMessage(userMessage, (chunk) => {
+        const llmHistory = convertToLLMMessages(history);
+        await sendMessage(userMessage, llmHistory, (chunk) => {
           fullText += chunk;
           
           // Measure streaming element height if ref is available

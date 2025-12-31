@@ -55,13 +55,15 @@ export async function sendMessage(
 
 
 export async function sendMessage(
-  message: string, 
+  message: string,
+  conversationHistory: any[],
   onChunk: (chunk: string) => void
 ): Promise<string> {
   const model = await getModel();
 
   const messages = [
     new Message('system', getSystemPrompt()),
+    ...conversationHistory,
     new Message('user', message)
   ];
   let fullResponse = '';
