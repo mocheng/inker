@@ -14,11 +14,13 @@
     "dotenv": "^17.2.3",
     "ink": "^6.6.0",
     "ink-text-input": "^6.0.0",
+    "lodash-es": "^4.17.22",
     "multi-llm-ts": "^4.6.2",
     "react": "^19.2.3"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.1",
+    "@types/lodash-es": "^4.17.12",
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.7",
     "@vitest/ui": "^4.0.16",

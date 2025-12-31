@@ -1,5 +1,6 @@
 import { igniteModel, loadModels, Message, logger } from 'multi-llm-ts';
 import dotenv from 'dotenv';
+import { throttle } from 'lodash-es';
 
 dotenv.config({ quiet: true });
 logger.disable(); // necessary, otherwise logging will screw up the CLI output
@@ -51,13 +52,24 @@ export async function sendMessage(
   
   const messages = [new Message('user', message)];
   let fullResponse = '';
+  let buffer = '';
+  
+  const flushBuffer = throttle(() => {
+    if (buffer) {
+      onChunk(buffer);
+      buffer = '';
+    }
+  }, 100);
   
   for await (const chunk of model.generate(messages)) {
     if (chunk.type === 'content' && chunk.text) {
       fullResponse += chunk.text;
-      onChunk(chunk.text);
+      buffer += chunk.text;
+      flushBuffer();
     }
   }
+  
+  flushBuffer.flush();
   
   return fullResponse;
 }
