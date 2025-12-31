@@ -1,6 +1,6 @@
 # Project Overview
 
-This project (`inker`) is a Command Line Interface (CLI) chat application that allows users to interact with Google's Gemini models directly from their terminal. It is built using **TypeScript**, **React**, and **Ink**, providing a modern, interactive TUI (Text User Interface).
+This project (`inker`) is a minimalist CLI coding tool that allows users to interact with Google's Gemini models directly from their terminal. It is built using **TypeScript**, **React**, and **Ink**, providing a modern, interactive TUI (Text User Interface).
 
 ## Architecture
 

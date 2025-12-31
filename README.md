@@ -1,6 +1,6 @@
 # Inker
 
-A terminal-based chat interface powered by Google Gemini AI, built with React and Ink.
+A minimalist CLI coding tool powered by Google Gemini AI, built with React and Ink.
 
 ## Features
 
