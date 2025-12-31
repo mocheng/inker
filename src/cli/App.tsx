@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Box, Text, Static, useStdout, measureElement, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import Progress from './Progress.js';
 import HistoryItem from './HistoryItem.js';
 import { sendMessage } from '../model/gemini.js';
+import { loadInputHistory, saveInputHistory } from './inputHistory.js';
 import type { Message } from './types.js';
 
 let nextMessageId = 0;
@@ -13,12 +14,18 @@ export default function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingId, setStreamingId] = useState<number | null>(null);
-  const [inputHistory, setInputHistory] = useState<string[]>([]);
+  const [inputHistory, setInputHistory] = useState<string[]>(() => loadInputHistory());
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [inputKey, setInputKey] = useState(0);
   const streamingRef = useRef<any>(null);
   const { stdout } = useStdout();
   const terminalHeight = stdout?.rows || 24;
+
+  useEffect(() => {
+    return () => {
+      saveInputHistory(inputHistory);
+    };
+  }, [inputHistory]);
 
   useInput((input, key) => {
     if (key.upArrow && inputHistory.length > 0) {
