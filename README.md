@@ -5,10 +5,12 @@ A terminal-based chat interface powered by Google Gemini AI, built with React an
 ## Features
 
 - 🤖 **Google Gemini AI Integration** - Chat with AI directly from your terminal
-- ⌨️ **Interactive Input** - Real-time keyboard input with backspace/delete support
+- ⌨️ **Interactive Input** - Text input with visible cursor using ink-text-input
 - 🎨 **Color-Coded Messages** - User (green), AI (white), errors (red)
 - ⏱️ **Animated Progress** - Loading spinner with elapsed time counter
+- 📜 **Streaming Responses** - Real-time AI response streaming
 - ⚡ **Performance Optimized** - Static rendering prevents unnecessary re-renders
+- 🧪 **Tested** - Unit tests with Vitest and ink-testing-library
 - 🛠️ **React DevTools Compatible** - Debug your CLI app with React DevTools
 
 ## Prerequisites
@@ -61,6 +63,11 @@ npm start
 # Build in watch mode
 npm run build -- --watch
 
+# Run tests
+npm test              # Watch mode
+npm run test:run      # Single run
+npm run test:ui       # UI mode
+
 # Run with React DevTools
 react-devtools  # In one terminal
 npm start       # In another terminal
@@ -75,21 +82,26 @@ inker/
 │   │   ├── App.tsx
 │   │   ├── Progress.tsx
 │   │   ├── LoadingIcon.tsx
-│   │   └── main.tsx
+│   │   ├── HistoryItem.tsx
+│   │   ├── main.tsx
+│   │   └── __tests__/
 │   └── model/        # API integration
 │       └── gemini.ts
 ├── dist/             # Compiled output
 ├── .env              # Environment config (gitignored)
 ├── .env.example      # Config template
+├── vitest.config.ts  # Test configuration
 └── package.json
 ```
 
 ## Tech Stack
 
-- [React](https://react.dev/) 18.2.0 - UI framework
-- [Ink](https://github.com/vadimdemedes/ink) 5.2.0 - React for CLIs
+- [React](https://react.dev/) 19.2.3 - UI framework
+- [Ink](https://github.com/vadimdemedes/ink) 6.6.0 - React for CLIs
+- [ink-text-input](https://github.com/vadimdemedes/ink-text-input) 6.0.0 - Text input component
 - [TypeScript](https://www.typescriptlang.org/) 5.7.2 - Type safety
 - [multi-llm-ts](https://github.com/nbonamy/multi-llm-ts) 4.6.2 - LLM API abstraction
+- [Vitest](https://vitest.dev/) 4.0.16 - Testing framework
 - [dotenv](https://github.com/motdotla/dotenv) 17.2.3 - Environment configuration
 
 ## License

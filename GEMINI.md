@@ -11,16 +11,19 @@ The project follows a clean separation of concerns:
     *   `main.tsx`: The entry point that mounts the React application.
     *   `App.tsx`: The main component managing the chat history, user input, and application state.
     *   `Progress.tsx`: A component for displaying loading indicators during API calls.
+    *   `HistoryItem.tsx`: A component for rendering individual chat messages with color coding.
+    *   `LoadingIcon.tsx`: An animated spinner component.
 *   **Model / Service Layer (`src/model/`)**: Manages the business logic and API interactions.
-    *   `gemini.ts`: Handles the communication with the Gemini API using the `multi-llm-ts` library. It loads configuration, initializes the model, and sends messages.
+    *   `gemini.ts`: Handles the communication with the Gemini API using the `multi-llm-ts` library. It loads configuration, initializes the model, and sends messages with streaming support.
 
 ## Key Files
 
-*   **`package.json`**: Defines dependencies (`ink`, `react`, `multi-llm-ts`) and scripts.
+*   **`package.json`**: Defines dependencies (`ink`, `ink-text-input`, `react`, `multi-llm-ts`) and scripts.
 *   **`.env.example`**: A template for the required environment variables.
 *   **`src/cli/main.tsx`**: The executable entry point for the CLI.
 *   **`src/cli/App.tsx`**: The core application logic and UI layout.
 *   **`src/model/gemini.ts`**: The interface to the Gemini LLM.
+*   **`vitest.config.ts`**: Configuration for the Vitest test runner.
 
 ## Building and Running
 
@@ -68,5 +71,7 @@ This runs `node dist/cli/main.js`.
 *   **Language**: TypeScript (strict mode enabled).
 *   **Framework**: React (Functional Components with Hooks).
 *   **UI Library**: Ink (for rendering React components to the terminal).
+*   **Input Handling**: `ink-text-input` for text input with cursor support.
 *   **State Management**: Local component state (`useState`) is used for managing chat history and input.
 *   **API Integration**: `multi-llm-ts` is used as an abstraction layer for the Gemini API.
+*   **Testing**: Vitest with `ink-testing-library` for component testing.
