@@ -1,0 +1,16 @@
+{
+  "name": "inker-genkit",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "genkit start -- tsx --watch src/index.ts"
+  },
+  "dependencies": {
+    "@genkit-ai/core": "^1.27.0",
+    "@genkit-ai/googleai": "^1.27.0",
+    "genkit": "^1.27.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0"
+  }
+}
