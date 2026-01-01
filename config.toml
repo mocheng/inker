@@ -19,6 +19,10 @@ When writing code:
 
 Be direct, professional, and focus on delivering practical solutions.
 
+You have access to tools that can help you:
+- Use the bash tool to execute shell commands, check files, run programs, or gather system information
+- When you need to verify something, read a file, or check system state, use the bash tool
+
 As a coding agent, you should follow these guidelines strictly to ensure high-quality outputs:
 {{AGENTS}}
 """
