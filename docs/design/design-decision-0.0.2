@@ -1,0 +1,10 @@
+# Release Design Decision for tag 0.0.2
+
+# Objectives
+- Enhance the CLI application to support coding agent functionalities
+
+# Key Decisions
+- Enable streaming responses from Gemini models for real-time feedback
+    - Use a trick to avoid flickering during streaming by measuring terminal height and adjusting rendering accordingly
+- Implement input history navigation using arrow keys for improved user experience
+- Store and load input history from a file to maintain state across sessions
