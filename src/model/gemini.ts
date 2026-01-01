@@ -3,15 +3,32 @@ import dotenv from 'dotenv';
 import { throttle } from 'lodash-es';
 import { getSystemPrompt } from '../config/config.js';
 import { BashPlugin } from './plugins/BashPlugin.js';
+import { ModelAdapter, MockModelAdapter } from './modelAdapter.js';
 
 dotenv.config({ quiet: true });
-logger.disable(); // necessary, otherwise logging will screw up the CLI output
+logger.disable();
 
 let cachedModel: any = null;
+const useMock = process.env.USE_MOCK_MODEL === 'true';
 
-async function getModel(): Promise<any> {
+class RealModelAdapter implements ModelAdapter {
+  constructor(private model: any) {}
+  
+  async *generate(messages: any[]): AsyncGenerator<any> {
+    for await (const chunk of this.model.generate(messages)) {
+      yield chunk;
+    }
+  }
+}
+
+async function getModelAdapter(): Promise<ModelAdapter> {
+  if (useMock) {
+    console.log('Using mock model (no API calls)');
+    return new MockModelAdapter();
+  }
+
   if (cachedModel) {
-    return cachedModel;
+    return new RealModelAdapter(cachedModel);
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -22,8 +39,6 @@ async function getModel(): Promise<any> {
   }
 
   const config = { apiKey };
-  
-  // Create model with tool capability explicitly enabled
   const model = {
     id: modelName,
     name: modelName,
@@ -36,14 +51,13 @@ async function getModel(): Promise<any> {
   };
   
   cachedModel = igniteModel('google', model, config);
-  
-  // Add bash plugin
   cachedModel.addPlugin(new BashPlugin());
   
-  return cachedModel;
+  return new RealModelAdapter(cachedModel);
 }
 
 /*
+Mock example - not used anymore, kept for reference
 export async function sendMessage(
   message: string, 
   onChunk: (chunk: string) => void
@@ -73,7 +87,7 @@ export async function sendMessage(
   conversationHistory: any[],
   onChunk: (chunk: string) => void
 ): Promise<string> {
-  const model = await getModel();
+  const model = await getModelAdapter();
 
   const messages = [
     new Message('system', getSystemPrompt()),
@@ -108,6 +122,17 @@ export async function sendMessage(
           flushBuffer();
         }
         if (chunk.state === 'completed') {
+          // Execute tool if result is null (from mock)
+          if (chunk.result === null && chunk.name === 'bash') {
+            const bashPlugin = new BashPlugin();
+            const result = await bashPlugin.execute({} as any, { command: 'ls' });
+            chunk.result = JSON.stringify(result);
+            
+            // Show tool result in UI
+            const resultMsg = `Result: ${JSON.stringify(result, null, 2)}\n`;
+            buffer += result.stdout ? result.stdout : `Error: ${result.stderr}\n`;
+            flushBuffer();
+          }
           toolResults.push(chunk);
         }
       }
@@ -117,7 +142,6 @@ export async function sendMessage(
     
     if (!hasToolCalls) break;
     
-    // Add tool results to messages and continue loop
     for (const result of toolResults) {
       messages.push(new Message('user', `Tool result from ${result.name}: ${result.result}`));
     }
