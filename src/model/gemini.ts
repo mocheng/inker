@@ -125,12 +125,18 @@ export async function sendMessage(
           // Execute tool if result is null (from mock)
           if (chunk.result === null && chunk.name === 'bash') {
             const bashPlugin = new BashPlugin();
-            const result = await bashPlugin.execute({} as any, { command: 'ls' });
+            const result = await bashPlugin.execute({} as any, { command: 'ls -l' });
             chunk.result = JSON.stringify(result);
             
-            // Show tool result in UI
-            const resultMsg = `Result: ${JSON.stringify(result, null, 2)}\n`;
-            buffer += result.stdout ? result.stdout : `Error: ${result.stderr}\n`;
+            // Show tool result in UI with color
+            if (result.stdout) {
+              const lines = result.stdout.split('\n');
+              buffer += lines.map((line: string) => `\x1b[36m${line}\x1b[0m`).join('\n') + '\n';
+            }
+            if (result.stderr) {
+              const lines = result.stderr.split('\n');
+              buffer += lines.map((line: string) => `\x1b[31m${line}\x1b[0m`).join('\n') + '\n';
+            }
             flushBuffer();
           }
           toolResults.push(chunk);
