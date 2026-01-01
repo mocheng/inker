@@ -15,14 +15,21 @@ The project follows a clean separation of concerns:
     *   `LoadingIcon.tsx`: An animated spinner component.
 *   **Model / Service Layer (`src/model/`)**: Manages the business logic and API interactions.
     *   `gemini.ts`: Handles the communication with the Gemini API using the `multi-llm-ts` library. It loads configuration, initializes the model, and sends messages with streaming support.
+    *   `tracing.ts`: Provides OpenTelemetry tracing utilities (`withSpan`) for instrumentation.
+    *   `modelAdapter.ts`: Abstraction layer for model adapters (real and mock).
+    *   `plugins/BashPlugin.ts`: Tool plugin that allows the AI to execute bash commands.
+*   **Telemetry (`src/telemetry.ts`)**: OpenTelemetry SDK setup that exports traces to Genkit UI.
+*   **Configuration (`src/config/`)**: Application configuration management.
 
 ## Key Files
 
-*   **`package.json`**: Defines dependencies (`ink`, `ink-text-input`, `react`, `multi-llm-ts`) and scripts.
+*   **`package.json`**: Defines dependencies and scripts.
 *   **`.env.example`**: A template for the required environment variables.
 *   **`src/cli/main.tsx`**: The executable entry point for the CLI.
 *   **`src/cli/App.tsx`**: The core application logic and UI layout.
-*   **`src/model/gemini.ts`**: The interface to the Gemini LLM.
+*   **`src/model/gemini.ts`**: The interface to the Gemini LLM with tracing.
+*   **`src/model/tracing.ts`**: OpenTelemetry tracing utilities.
+*   **`src/telemetry.ts`**: OpenTelemetry SDK configuration for Genkit.
 *   **`vitest.config.ts`**: Configuration for the Vitest test runner.
 
 ## Building and Running
@@ -44,7 +51,7 @@ The project follows a clean separation of concerns:
     ```bash
     cp .env.example .env
     ```
-    Open `.env` and add your `GEMINI_API_KEY`. You can also specify the `GEMINI_MODEL` (defaults to `gemini-pro`).
+    Open `.env` and add your `GEMINI_API_KEY`. You can also specify the `GEMINI_MODEL` (defaults to `gemini-2.0-flash`).
 
 ### Build
 
@@ -66,6 +73,25 @@ npm start
 
 This runs `node dist/cli/main.js`.
 
+### Run with Genkit UI (Observability)
+
+To view traces in Genkit UI:
+
+1.  Start Genkit in the `genkit/` folder:
+    ```bash
+    cd genkit && npm run dev
+    ```
+2.  Open Genkit UI at `http://localhost:4000`
+3.  Run the CLI in another terminal - traces will appear in Genkit UI
+
+## Tracing
+
+The application uses OpenTelemetry to instrument LLM calls:
+
+*   **Spans**: Each `gemini.chat` and `gemini.generate.N` operation creates a span
+*   **Attributes**: Spans include `input-json`, `output-json`, and `context-json` for Genkit UI display
+*   **Export**: Traces are exported to Genkit's OTLP endpoint at `http://localhost:4033/api/otlp`
+
 ## Development Conventions
 
 *   **Language**: TypeScript (strict mode enabled).
@@ -74,4 +100,5 @@ This runs `node dist/cli/main.js`.
 *   **Input Handling**: `ink-text-input` for text input with cursor support.
 *   **State Management**: Local component state (`useState`) is used for managing chat history and input.
 *   **API Integration**: `multi-llm-ts` is used as an abstraction layer for the Gemini API.
+*   **Tracing**: OpenTelemetry with custom Genkit exporter.
 *   **Testing**: Vitest with `ink-testing-library` for component testing.
