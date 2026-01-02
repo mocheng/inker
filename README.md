@@ -66,7 +66,7 @@ The app exports OpenTelemetry traces. You can use either **Jaeger** or **Genkit 
 
 ```bash
 # 1. Start Jaeger
-docker run -d --rm --name jaeger \
+docker run -d --name jaeger \
   -p 16686:16686 \
   -p 4317:4317 \
   -p 4318:4318 \

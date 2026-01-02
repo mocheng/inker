@@ -110,10 +110,24 @@ export default function App() {
         setIsLoading(false);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-        setHistory(prev => 
-          prev.filter(item => item.id !== responseId)
-            .concat({ id: nextMessageId++, type: 'error', text: `Error: ${errorMsg}` })
-        );
+        setHistory(prev => {
+          // Find the streaming response to preserve any partial content
+          const streamingItem = prev.find(item => item.id === responseId);
+          const hasPartialContent = streamingItem && streamingItem.text.trim().length > 0;
+          
+          if (hasPartialContent) {
+            // Keep partial content and append error as a new message
+            return [
+              ...prev,
+              { id: nextMessageId++, type: 'error', text: `Error: ${errorMsg}` }
+            ];
+          } else {
+            // No partial content, replace empty response with error
+            return prev
+              .filter(item => item.id !== responseId)
+              .concat({ id: nextMessageId++, type: 'error', text: `Error: ${errorMsg}` });
+          }
+        });
         setStreamingId(null);
         setIsLoading(false);
       }

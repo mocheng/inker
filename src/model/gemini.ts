@@ -3,6 +3,14 @@ import dotenv from 'dotenv';
 import { throttle } from 'lodash-es';
 import { getSystemPrompt } from '../config/config.js';
 import { BashPlugin } from './plugins/BashPlugin.js';
+import { ReadFilePlugin } from './plugins/ReadFilePlugin.js';
+import { GitPlugin } from './plugins/GitPlugin.js';
+import { WriteFilePlugin } from './plugins/WriteFilePlugin.js';
+import { ListDirectoryPlugin } from './plugins/ListDirectoryPlugin.js';
+import { EditFilePlugin } from './plugins/EditFilePlugin.js';
+import { GrepPlugin } from './plugins/GrepPlugin.js';
+import { GlobPlugin } from './plugins/GlobPlugin.js';
+import { GithubPRPlugin } from './plugins/GithubPRPlugin.js';
 import { ModelAdapter, MockModelAdapter } from './modelAdapter.js';
 import { withSpan } from './tracing.js';
 
@@ -53,6 +61,14 @@ async function getModelAdapter(): Promise<ModelAdapter> {
   
   cachedModel = igniteModel('google', model, config);
   cachedModel.addPlugin(new BashPlugin());
+  cachedModel.addPlugin(new ReadFilePlugin());
+  cachedModel.addPlugin(new GitPlugin());
+  cachedModel.addPlugin(new WriteFilePlugin());
+  cachedModel.addPlugin(new ListDirectoryPlugin());
+  cachedModel.addPlugin(new EditFilePlugin());
+  cachedModel.addPlugin(new GrepPlugin());
+  cachedModel.addPlugin(new GlobPlugin());
+  cachedModel.addPlugin(new GithubPRPlugin());
   
   return new RealModelAdapter(cachedModel);
 }
