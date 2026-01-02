@@ -10,7 +10,7 @@ A minimalist CLI coding tool powered by Google Gemini AI, built with React and I
 - 🎨 **Color-Coded Messages** - User (green), AI (white), errors (red)
 - ⏱️ **Animated Progress** - Loading spinner with elapsed time counter
 - 📜 **Streaming Responses** - Real-time AI response streaming
-- 📊 **Observability** - OpenTelemetry tracing with Genkit UI integration
+- 📊 **Observability** - OpenTelemetry tracing with Jaeger or Genkit UI
 - ⚡ **Performance Optimized** - Static rendering prevents unnecessary re-renders
 - 🧪 **Tested** - Unit tests with Vitest and ink-testing-library
 
@@ -58,22 +58,50 @@ npm start
 - **Enter** to send message
 - **Ctrl+C** to exit
 
-## Observability with Genkit UI
+## Observability
 
-View traces and debug AI interactions using Genkit UI:
+The app exports OpenTelemetry traces. You can use either **Jaeger** or **Genkit UI** to visualize them.
+
+### Option 1: Jaeger (Default)
 
 ```bash
-# Terminal 1: Start Genkit dev server
-cd genkit && npm run dev
+# 1. Start Jaeger
+docker run -d --rm --name jaeger \
+  -p 16686:16686 \
+  -p 4317:4317 \
+  -p 4318:4318 \
+  jaegertracing/jaeger:2.13.0
 
-# Terminal 2: Run the CLI
+# 2. Run inker (uses Jaeger by default)
 npm start
+
+# 3. View traces
+open http://localhost:16686
 ```
 
-Open `http://localhost:4000` to view traces with:
-- **Input** - Messages sent to the model
-- **Output** - Model responses
-- **Context** - Model configuration and metadata
+Select "inker" from the Service dropdown to see traces.
+
+### Option 2: Genkit UI
+
+Genkit provides a specialized UI for AI/LLM observability with Input/Output/Context tabs.
+
+```bash
+# 1. Start Genkit dev server
+cd genkit && npm run dev
+
+# 2. Run inker with Genkit endpoint
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4033/api/otlp npm start
+
+# 3. View traces
+open http://localhost:4000
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base OTLP endpoint | `http://localhost:4318` |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Traces endpoint (overrides base) | `{base}/v1/traces` |
 
 ## Development
 
@@ -101,7 +129,7 @@ inker/
 │   │   └── __tests__/
 │   ├── model/            # API integration
 │   │   ├── gemini.ts     # Gemini API with tracing
-│   │   ├── tracing.ts    # OpenTelemetry utilities
+│   │   ├── tracing.ts    # OpenTelemetry tracing utilities
 │   │   ├── modelAdapter.ts
 │   │   └── plugins/
 │   │       └── BashPlugin.ts
@@ -123,6 +151,7 @@ inker/
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
 - [multi-llm-ts](https://github.com/nbonamy/multi-llm-ts) - LLM API abstraction
 - [OpenTelemetry](https://opentelemetry.io/) - Distributed tracing
+- [Jaeger](https://www.jaegertracing.io/) - Trace visualization
 - [Genkit](https://firebase.google.com/docs/genkit) - AI observability UI
 - [Vitest](https://vitest.dev/) - Testing framework
 - [dotenv](https://github.com/motdotla/dotenv) - Environment configuration

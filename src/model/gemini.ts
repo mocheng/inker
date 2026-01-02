@@ -24,7 +24,7 @@ class RealModelAdapter implements ModelAdapter {
 
 async function getModelAdapter(): Promise<ModelAdapter> {
   if (useMock) {
-    console.log('Using mock model (no API calls)');
+    // console.log('Using mock model (no API calls)');
     return new MockModelAdapter();
   }
 
@@ -147,6 +147,17 @@ export async function sendMessage(
           messageCount: messages.length
         }));
         
+        // Add span events for input messages per OpenTelemetry GenAI semantic conventions
+        // https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-events/
+        for (const msg of inputMessages) {
+          genSpan.addEvent(`gen_ai.${msg.role}.message`, {
+            'gen_ai.system': 'google',
+            'gen_ai.request.model': process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+            'gen_ai.message.role': msg.role,
+            'gen_ai.message.content': msg.content,
+          });
+        }
+        
         let iterationResponse = '';
         
         for await (const chunk of model.generate(messages)) {
@@ -187,6 +198,14 @@ export async function sendMessage(
         
         // Set output-json attribute for Genkit UI
         genSpan.setAttribute('output-json', JSON.stringify([{ role: 'assistant', content: iterationResponse }]));
+        
+        // Add span event for assistant response per OpenTelemetry GenAI semantic conventions
+        genSpan.addEvent('gen_ai.assistant.message', {
+          'gen_ai.system': 'google',
+          'gen_ai.request.model': process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+          'gen_ai.message.role': 'assistant',
+          'gen_ai.message.content': iterationResponse,
+        });
         
         genSpan.setAttribute('llm.has_tool_calls', hasToolCalls);
       });
