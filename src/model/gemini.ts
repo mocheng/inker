@@ -12,7 +12,7 @@ import { GrepPlugin } from './plugins/GrepPlugin.js';
 import { GlobPlugin } from './plugins/GlobPlugin.js';
 import { GithubPRPlugin } from './plugins/GithubPRPlugin.js';
 import { ModelAdapter, MockModelAdapter } from './modelAdapter.js';
-import { withSpan } from './tracing.js';
+import { withSpan, logWithSpanCorrelation } from './tracing.js';
 
 dotenv.config({ quiet: true });
 logger.disable();
@@ -175,6 +175,14 @@ export async function sendMessage(
         }
         
         let iterationResponse = '';
+        
+        // Log with span correlation before calling model.generate()
+        logWithSpanCorrelation('info', 'gen_ai.generate.start', 'Starting model.generate() call', {
+          model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+          iteration: iterationCount,
+          messageCount: messages.length,
+          messages: JSON.stringify(inputMessages),
+        });
         
         for await (const chunk of model.generate(messages)) {
           if (chunk.type === 'content' && chunk.text) {

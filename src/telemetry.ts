@@ -1,12 +1,17 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
+import { LoggerProvider, BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
+import { logs } from '@opentelemetry/api-logs';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 
 /**
- * OpenTelemetry Tracing Configuration
+ * OpenTelemetry Tracing & Logging Configuration
  * 
  * Environment variables:
  *   OTEL_EXPORTER_OTLP_TRACES_ENDPOINT - Trace endpoint (full URL including path)
- *   OTEL_EXPORTER_OTLP_ENDPOINT        - Base endpoint (fallback, /v1/traces appended)
+ *   OTEL_EXPORTER_OTLP_LOGS_ENDPOINT   - Logs endpoint (full URL including path)
+ *   OTEL_EXPORTER_OTLP_ENDPOINT        - Base endpoint (fallback, /v1/traces or /v1/logs appended)
  * 
  * ─────────────────────────────────────────────────────────────────────────────
  * JAEGER (default)
@@ -39,9 +44,26 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 // Default to Jaeger OTLP HTTP endpoint
 const DEFAULT_ENDPOINT = 'http://localhost:4318';
 
-// Get trace endpoint from environment
+// Get endpoints from environment
 const baseEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || DEFAULT_ENDPOINT;
 const tracesEndpoint = process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || `${baseEndpoint}/v1/traces`;
+const logsEndpoint = process.env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT || `${baseEndpoint}/v1/logs`;
+
+// Create shared resource for service identification
+const resource = resourceFromAttributes({
+  'service.name': 'inker',
+});
+
+// Setup LoggerProvider with OTLP export
+const logExporter = new OTLPLogExporter({ url: logsEndpoint });
+const logProcessor = new BatchLogRecordProcessor(logExporter);
+const loggerProvider = new LoggerProvider({
+  resource,
+  processors: [logProcessor],
+});
+
+// Register the global logger provider
+logs.setGlobalLoggerProvider(loggerProvider);
 
 // Setup NodeSDK for traces
 const sdk = new NodeSDK({
@@ -51,4 +73,4 @@ const sdk = new NodeSDK({
 
 sdk.start();
 
-export { sdk };
+export { sdk, loggerProvider };
