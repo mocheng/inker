@@ -27,11 +27,27 @@ export default function App() {
   const { exit } = useApp();
   const terminalHeight = stdout?.rows || 24;
 
+  // Filter commands based on input prefix
+  const getFilteredCommands = useCallback((inputValue: string): string[] => {
+    if (!inputValue.startsWith('/')) {
+      return [];
+    }
+    return COMMANDS.filter(cmd => cmd.startsWith(inputValue));
+  }, []);
+
   useEffect(() => {
     return () => {
       saveInputHistory(inputHistory);
     };
   }, [inputHistory]);
+
+  // Reset selected hint index when filtered commands change
+  useEffect(() => {
+    const filteredCommands = getFilteredCommands(input);
+    if (filteredCommands.length > 0 && selectedHintIndex >= filteredCommands.length) {
+      setSelectedHintIndex(0);
+    }
+  }, [input, getFilteredCommands, selectedHintIndex]);
 
   const handleHistoryNavigation = useCallback((direction: 'up' | 'down') => {
     if (direction === 'up' && inputHistory.length > 0) {
@@ -54,36 +70,38 @@ export default function App() {
     }
   }, [inputHistory, historyIndex]);
 
-  const handleHintNavigation = useCallback((direction: 'up' | 'down') => {
+  const handleHintNavigation = useCallback((direction: 'up' | 'down', filteredCommands: string[]) => {
+    if (filteredCommands.length === 0) return;
+    
     if (direction === 'up') {
-      setSelectedHintIndex(prev => (prev > 0 ? prev - 1 : COMMANDS.length - 1));
+      setSelectedHintIndex(prev => (prev > 0 ? prev - 1 : filteredCommands.length - 1));
     } else if (direction === 'down') {
-      setSelectedHintIndex(prev => (prev < COMMANDS.length - 1 ? prev + 1 : 0));
+      setSelectedHintIndex(prev => (prev < filteredCommands.length - 1 ? prev + 1 : 0));
     }
   }, []);
 
-  const handleSelectHint = useCallback(() => {
-    if (showHints && selectedHintIndex >= 0 && selectedHintIndex < COMMANDS.length) {
-      const selectedCommand = COMMANDS[selectedHintIndex];
+  const handleSelectHint = useCallback((filteredCommands: string[]) => {
+    if (filteredCommands.length > 0 && selectedHintIndex >= 0 && selectedHintIndex < filteredCommands.length) {
+      const selectedCommand = filteredCommands[selectedHintIndex];
       setInput(selectedCommand);
       setShowHints(false);
       setSelectedHintIndex(0);
-      // Execute the command
-      if (selectedCommand === '/quit' || selectedCommand === '/exit') {
-        exit();
-      }
+      // Don't execute immediately - just fill the input, user can press ENTER to submit
     }
-  }, [showHints, selectedHintIndex, exit]);
+  }, [selectedHintIndex]);
 
   useInput((_input, key) => {
-    if (showHints) {
+    const filteredCommands = getFilteredCommands(input);
+    const hasHints = showHints && filteredCommands.length > 0;
+    
+    if (hasHints) {
       // When hints are shown, arrow keys navigate hints
       if (key.upArrow) {
-        handleHintNavigation('up');
+        handleHintNavigation('up', filteredCommands);
       } else if (key.downArrow) {
-        handleHintNavigation('down');
+        handleHintNavigation('down', filteredCommands);
       } else if (key.return) {
-        handleSelectHint();
+        handleSelectHint(filteredCommands);
       }
     } else {
       // When hints are not shown, arrow keys navigate history
@@ -202,6 +220,8 @@ export default function App() {
 
   const completedHistory = history.filter(item => item.id !== streamingId);
   const streamingItem = history.find(item => item.id === streamingId);
+  const filteredCommands = getFilteredCommands(input);
+  const hasHints = showHints && filteredCommands.length > 0;
 
   return (
     <>
@@ -214,9 +234,9 @@ export default function App() {
         </Box>
       )}
       {isLoading && <Progress key="progress" />}
-      {showHints && (
+      {hasHints && (
         <Box paddingX={1} marginBottom={1} flexDirection="column">
-          {COMMANDS.map((command, index) => (
+          {filteredCommands.map((command, index) => (
             <Box key={command}>
               <Text>
                 {index === selectedHintIndex ? (
@@ -236,9 +256,10 @@ export default function App() {
           value={input} 
           onChange={(value) => {
             setInput(value);
-            const shouldShow = value === '/';
+            const shouldShow = value.startsWith('/');
             setShowHints(shouldShow);
             if (shouldShow) {
+              // Reset selected index when input changes
               setSelectedHintIndex(0);
             }
           }} 
