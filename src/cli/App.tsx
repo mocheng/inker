@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Box, Text, Static, useStdout, measureElement, useInput } from 'ink';
+import { Box, Text, Static, useStdout, measureElement, useInput, useApp } from 'ink';
 import TextInput from 'ink-text-input';
 import Progress from './Progress.js';
 import HistoryItem from './HistoryItem.js';
@@ -18,9 +18,11 @@ export default function App() {
   const [inputHistory, setInputHistory] = useState<string[]>(() => loadInputHistory());
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [inputKey, setInputKey] = useState(0);
+  const [showHints, setShowHints] = useState(false);
   const nextMessageIdRef = useRef<number>(0);
   const streamingRef = useRef<Box | null>(null);
   const { stdout } = useStdout();
+  const { exit } = useApp();
   const terminalHeight = stdout?.rows || 24;
 
   useEffect(() => {
@@ -123,9 +125,17 @@ export default function App() {
     }
 
     const userMessage = input.trim();
+    
+    // Handle quit/exit commands
+    if (userMessage === '/quit' || userMessage === '/exit') {
+      exit();
+      return;
+    }
+
     setInputHistory(prev => [...prev, userMessage]);
     setHistoryIndex(-1);
     setInput('');
+    setShowHints(false);
     setHistory(prev => [...prev, { id: getNextMessageId(), type: 'user', text: userMessage }]);
     setIsLoading(true);
 
@@ -152,7 +162,7 @@ export default function App() {
       setStreamingId(null);
       setIsLoading(false);
     }
-  }, [input, isLoading, history, getNextMessageId, handleStreamingChunk, updateStreamingMessage, handleError]);
+  }, [input, isLoading, history, getNextMessageId, handleStreamingChunk, updateStreamingMessage, handleError, exit]);
 
   const completedHistory = history.filter(item => item.id !== streamingId);
   const streamingItem = history.find(item => item.id === streamingId);
@@ -168,12 +178,20 @@ export default function App() {
         </Box>
       )}
       {isLoading && <Progress key="progress" />}
+      {showHints && (
+        <Box paddingX={1} marginBottom={1}>
+          <Text dimColor>Commands: /quit, /exit</Text>
+        </Box>
+      )}
       <Box borderStyle="round" borderColor="cyan" paddingX={1}>
         <Text>&gt; </Text>
         <TextInput 
           key={inputKey}
           value={input} 
-          onChange={setInput} 
+          onChange={(value) => {
+            setInput(value);
+            setShowHints(value === '/');
+          }} 
           onSubmit={handleSubmit}
           showCursor={true}
         />
