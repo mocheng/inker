@@ -21,6 +21,7 @@ export default function App() {
   const [inputKey, setInputKey] = useState(0);
   const [showHints, setShowHints] = useState(false);
   const [selectedHintIndex, setSelectedHintIndex] = useState(0);
+  const justSelectedHintRef = useRef<boolean>(false);
   const nextMessageIdRef = useRef<number>(0);
   const streamingRef = useRef<React.ElementRef<typeof Box> | null>(null);
   const { stdout } = useStdout();
@@ -83,10 +84,14 @@ export default function App() {
   const handleSelectHint = useCallback((filteredCommands: string[]) => {
     if (filteredCommands.length > 0 && selectedHintIndex >= 0 && selectedHintIndex < filteredCommands.length) {
       const selectedCommand = filteredCommands[selectedHintIndex];
+      justSelectedHintRef.current = true;
       setInput(selectedCommand);
       setShowHints(false);
       setSelectedHintIndex(0);
-      // Don't execute immediately - just fill the input, user can press ENTER to submit
+      // Reset the flag after a short delay to allow state update
+      setTimeout(() => {
+        justSelectedHintRef.current = false;
+      }, 0);
     }
   }, [selectedHintIndex]);
 
@@ -173,6 +178,12 @@ export default function App() {
   }, [getNextMessageId]);
 
   const handleSubmit = useCallback(async () => {
+    // If we just selected a hint, don't submit - let user press ENTER again
+    if (justSelectedHintRef.current) {
+      justSelectedHintRef.current = false;
+      return;
+    }
+
     if (!input.trim() || isLoading) {
       return;
     }
