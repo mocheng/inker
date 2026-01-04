@@ -20,7 +20,7 @@ export default function App() {
   const [inputKey, setInputKey] = useState(0);
   const [showHints, setShowHints] = useState(false);
   const nextMessageIdRef = useRef<number>(0);
-  const streamingRef = useRef<Box | null>(null);
+  const streamingRef = useRef<React.ElementRef<typeof Box> | null>(null);
   const { stdout } = useStdout();
   const { exit } = useApp();
   const terminalHeight = stdout?.rows || 24;
