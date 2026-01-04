@@ -86,6 +86,7 @@ export default function App() {
       const selectedCommand = filteredCommands[selectedHintIndex];
       justSelectedHintRef.current = true;
       setInput(selectedCommand);
+      setInputKey(prev => prev + 1); // Reset TextInput to position cursor at end
       setShowHints(false);
       setSelectedHintIndex(0);
       // Reset the flag after a short delay to allow state update
