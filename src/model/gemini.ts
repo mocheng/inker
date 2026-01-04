@@ -1,4 +1,4 @@
-import { igniteModel, Message, logger, type Model } from 'multi-llm-ts';
+import { igniteModel, Message, logger, type LlmModel } from 'multi-llm-ts';
 import dotenv from 'dotenv';
 import { throttle } from 'lodash-es';
 import { getSystemPrompt } from '../config/config.js';
@@ -22,11 +22,11 @@ interface ToolResult {
   result: string;
 }
 
-let cachedModel: Model | null = null;
+let cachedModel: LlmModel | null = null;
 const useMock = process.env.USE_MOCK_MODEL === 'true';
 
 class RealModelAdapter implements ModelAdapter {
-  constructor(private model: Model) {}
+  constructor(private model: LlmModel) {}
   
   async *generate(messages: Message[]): AsyncGenerator<Chunk> {
     for await (const chunk of this.model.generate(messages)) {
@@ -70,7 +70,7 @@ async function getModelAdapter(): Promise<ModelAdapter> {
   return new RealModelAdapter(cachedModel);
 }
 
-function initializePlugins(model: Model): void {
+function initializePlugins(model: LlmModel): void {
   model.addPlugin(new BashPlugin());
   model.addPlugin(new ReadFilePlugin());
   model.addPlugin(new GitPlugin());
