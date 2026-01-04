@@ -1,11 +1,25 @@
+import { Message } from 'multi-llm-ts';
+
+export interface Chunk {
+  type: 'content' | 'tool';
+  text?: string;
+  name?: string;
+  state?: 'running' | 'completed';
+  status?: string;
+  result?: string | null;
+  id?: string;
+}
+
 export interface ModelAdapter {
-  generate(messages: any[]): AsyncGenerator<any>;
+  generate(messages: Message[]): AsyncGenerator<Chunk>;
 }
 
 export class MockModelAdapter implements ModelAdapter {
-  async *generate(messages: any[]): AsyncGenerator<any> {
+  async *generate(messages: Message[]): AsyncGenerator<Chunk> {
     const lastMessage = messages[messages.length - 1];
-    const prompt = lastMessage?.content || '';
+    const prompt = typeof lastMessage?.content === 'string' 
+      ? lastMessage.content 
+      : String(lastMessage?.content || '');
     
     // Detect tool call request
     if (prompt.toLowerCase().includes('use tool ls')) {

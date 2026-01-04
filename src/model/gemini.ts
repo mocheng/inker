@@ -1,4 +1,4 @@
-import { igniteModel, loadModels, Message, logger } from 'multi-llm-ts';
+import { igniteModel, Message, logger, type Model } from 'multi-llm-ts';
 import dotenv from 'dotenv';
 import { throttle } from 'lodash-es';
 import { getSystemPrompt } from '../config/config.js';
@@ -11,21 +11,26 @@ import { EditFilePlugin } from './plugins/EditFilePlugin.js';
 import { GrepPlugin } from './plugins/GrepPlugin.js';
 import { GlobPlugin } from './plugins/GlobPlugin.js';
 import { GithubPRPlugin } from './plugins/GithubPRPlugin.js';
-import { ModelAdapter, MockModelAdapter } from './modelAdapter.js';
+import { ModelAdapter, MockModelAdapter, type Chunk } from './modelAdapter.js';
 import { withSpan, logWithSpanCorrelation } from './tracing.js';
 
 dotenv.config({ quiet: true });
 logger.disable();
 
-let cachedModel: any = null;
+interface ToolResult {
+  name: string;
+  result: string;
+}
+
+let cachedModel: Model | null = null;
 const useMock = process.env.USE_MOCK_MODEL === 'true';
 
 class RealModelAdapter implements ModelAdapter {
-  constructor(private model: any) {}
+  constructor(private model: Model) {}
   
-  async *generate(messages: any[]): AsyncGenerator<any> {
+  async *generate(messages: Message[]): AsyncGenerator<Chunk> {
     for await (const chunk of this.model.generate(messages)) {
-      yield chunk;
+      yield chunk as Chunk;
     }
   }
 }
@@ -60,48 +65,26 @@ async function getModelAdapter(): Promise<ModelAdapter> {
   };
   
   cachedModel = igniteModel('google', model, config);
-  cachedModel.addPlugin(new BashPlugin());
-  cachedModel.addPlugin(new ReadFilePlugin());
-  cachedModel.addPlugin(new GitPlugin());
-  cachedModel.addPlugin(new WriteFilePlugin());
-  cachedModel.addPlugin(new ListDirectoryPlugin());
-  cachedModel.addPlugin(new EditFilePlugin());
-  cachedModel.addPlugin(new GrepPlugin());
-  cachedModel.addPlugin(new GlobPlugin());
-  cachedModel.addPlugin(new GithubPRPlugin());
+  initializePlugins(cachedModel);
   
   return new RealModelAdapter(cachedModel);
 }
 
-/*
-Mock example - not used anymore, kept for reference
-export async function sendMessage(
-  message: string, 
-  onChunk: (chunk: string) => void
-): Promise<string> {
-  return new Promise((resolve) => {
-    let count = 0;
-    let fullResponse = '';
-    function sendChunk() {
-      if (count < 70) {
-        const chunk = `chunk-${count + 1}\n`;
-        onChunk(chunk);
-        fullResponse += chunk;
-        count++;
-        setTimeout(sendChunk, 100);
-      } else {
-        resolve(fullResponse);
-      }
-    }
-    sendChunk();
-  });
+function initializePlugins(model: Model): void {
+  model.addPlugin(new BashPlugin());
+  model.addPlugin(new ReadFilePlugin());
+  model.addPlugin(new GitPlugin());
+  model.addPlugin(new WriteFilePlugin());
+  model.addPlugin(new ListDirectoryPlugin());
+  model.addPlugin(new EditFilePlugin());
+  model.addPlugin(new GrepPlugin());
+  model.addPlugin(new GlobPlugin());
+  model.addPlugin(new GithubPRPlugin());
 }
-*/
-
 
 export async function sendMessage(
   message: string,
-  conversationHistory: any[],
+  conversationHistory: Message[],
   onChunk: (chunk: string) => void
 ): Promise<string> {
   return withSpan('gemini.chat', {
@@ -139,7 +122,7 @@ export async function sendMessage(
     
     while (true) {
       let hasToolCalls = false;
-      const toolResults: any[] = [];
+      const toolResults: ToolResult[] = [];
       
       await withSpan(`gemini.generate.${iterationCount}`, {
         'gen_ai.system': 'google',
@@ -198,24 +181,16 @@ export async function sendMessage(
               flushBuffer();
             }
             if (chunk.state === 'completed') {
-              genSpan.addEvent('tool.completed', { 'tool.name': chunk.name });
+              genSpan.addEvent('tool.completed', { 'tool.name': chunk.name || 'unknown' });
               
-              if (chunk.result === null && chunk.name === 'bash') {
-                const bashPlugin = new BashPlugin();
-                const result = await bashPlugin.execute({} as any, { command: 'ls -l' });
-                chunk.result = JSON.stringify(result);
-                
-                if (result.stdout) {
-                  const lines = result.stdout.split('\n');
-                  buffer += lines.map((line: string) => `\x1b[36m${line}\x1b[0m`).join('\n') + '\n';
-                }
-                if (result.stderr) {
-                  const lines = result.stderr.split('\n');
-                  buffer += lines.map((line: string) => `\x1b[31m${line}\x1b[0m`).join('\n') + '\n';
-                }
-                flushBuffer();
+              // Tool results should be provided by the plugin system
+              // If result is null, it means the tool execution failed or wasn't properly handled
+              if (chunk.result !== null && chunk.result !== undefined) {
+                toolResults.push({
+                  name: chunk.name || 'unknown',
+                  result: typeof chunk.result === 'string' ? chunk.result : JSON.stringify(chunk.result)
+                });
               }
-              toolResults.push(chunk);
             }
           }
         }
@@ -239,6 +214,7 @@ export async function sendMessage(
       
       if (!hasToolCalls) break;
       
+      // Add tool results to conversation for next iteration
       for (const result of toolResults) {
         messages.push(new Message('user', `Tool result from ${result.name}: ${result.result}`));
       }
