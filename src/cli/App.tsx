@@ -9,6 +9,7 @@ import { loadInputHistory, saveInputHistory } from './inputHistory.js';
 import type { Message } from './types.js';
 
 const MIN_TERMINAL_MARGIN = 7;
+const COMMANDS = ['/quit', '/exit'];
 
 export default function App() {
   const [history, setHistory] = useState<Message[]>([]);
@@ -19,6 +20,7 @@ export default function App() {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [inputKey, setInputKey] = useState(0);
   const [showHints, setShowHints] = useState(false);
+  const [selectedHintIndex, setSelectedHintIndex] = useState(0);
   const nextMessageIdRef = useRef<number>(0);
   const streamingRef = useRef<React.ElementRef<typeof Box> | null>(null);
   const { stdout } = useStdout();
@@ -52,11 +54,44 @@ export default function App() {
     }
   }, [inputHistory, historyIndex]);
 
+  const handleHintNavigation = useCallback((direction: 'up' | 'down') => {
+    if (direction === 'up') {
+      setSelectedHintIndex(prev => (prev > 0 ? prev - 1 : COMMANDS.length - 1));
+    } else if (direction === 'down') {
+      setSelectedHintIndex(prev => (prev < COMMANDS.length - 1 ? prev + 1 : 0));
+    }
+  }, []);
+
+  const handleSelectHint = useCallback(() => {
+    if (showHints && selectedHintIndex >= 0 && selectedHintIndex < COMMANDS.length) {
+      const selectedCommand = COMMANDS[selectedHintIndex];
+      setInput(selectedCommand);
+      setShowHints(false);
+      setSelectedHintIndex(0);
+      // Execute the command
+      if (selectedCommand === '/quit' || selectedCommand === '/exit') {
+        exit();
+      }
+    }
+  }, [showHints, selectedHintIndex, exit]);
+
   useInput((_input, key) => {
-    if (key.upArrow) {
-      handleHistoryNavigation('up');
-    } else if (key.downArrow) {
-      handleHistoryNavigation('down');
+    if (showHints) {
+      // When hints are shown, arrow keys navigate hints
+      if (key.upArrow) {
+        handleHintNavigation('up');
+      } else if (key.downArrow) {
+        handleHintNavigation('down');
+      } else if (key.return) {
+        handleSelectHint();
+      }
+    } else {
+      // When hints are not shown, arrow keys navigate history
+      if (key.upArrow) {
+        handleHistoryNavigation('up');
+      } else if (key.downArrow) {
+        handleHistoryNavigation('down');
+      }
     }
   });
 
@@ -136,6 +171,7 @@ export default function App() {
     setHistoryIndex(-1);
     setInput('');
     setShowHints(false);
+    setSelectedHintIndex(0);
     setHistory(prev => [...prev, { id: getNextMessageId(), type: 'user', text: userMessage }]);
     setIsLoading(true);
 
@@ -179,8 +215,18 @@ export default function App() {
       )}
       {isLoading && <Progress key="progress" />}
       {showHints && (
-        <Box paddingX={1} marginBottom={1}>
-          <Text dimColor>Commands: /quit, /exit</Text>
+        <Box paddingX={1} marginBottom={1} flexDirection="column">
+          {COMMANDS.map((command, index) => (
+            <Box key={command}>
+              <Text>
+                {index === selectedHintIndex ? (
+                  <Text color="cyan" inverse>{command}</Text>
+                ) : (
+                  <Text dimColor>{command}</Text>
+                )}
+              </Text>
+            </Box>
+          ))}
         </Box>
       )}
       <Box borderStyle="round" borderColor="cyan" paddingX={1}>
@@ -190,7 +236,11 @@ export default function App() {
           value={input} 
           onChange={(value) => {
             setInput(value);
-            setShowHints(value === '/');
+            const shouldShow = value === '/';
+            setShowHints(shouldShow);
+            if (shouldShow) {
+              setSelectedHintIndex(0);
+            }
           }} 
           onSubmit={handleSubmit}
           showCursor={true}
