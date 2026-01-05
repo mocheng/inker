@@ -1,4 +1,4 @@
-import { igniteModel, Message, logger, LlmModel } from 'multi-llm-ts';
+import { igniteModel, Message, logger, type LlmModel } from 'multi-llm-ts';
 import dotenv from 'dotenv';
 import { throttle } from 'lodash-es';
 import { getSystemPrompt } from '../config/config.js';
