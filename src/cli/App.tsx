@@ -8,6 +8,15 @@ import { convertToLLMMessages } from '../model/context.js';
 import { loadInputHistory, saveInputHistory } from './inputHistory.js';
 import type { Message } from './types.js';
 
+const INKER_ASCII_ART = `
+██╗███╗   ██╗██╗  ██╗███████╗██████╗ 
+██║████╗  ██║██║ ██╔╝██╔════╝██╔══██╗
+██║██╔██╗ ██║█████╔╝ █████╗  ██████╔╝
+██║██║╚██╗██║██╔═██╗ ██╔══╝  ██╔══██╗
+██║██║ ╚████║██║  ██╗███████╗██║  ██║
+╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+`;
+
 const MIN_TERMINAL_MARGIN = 7;
 const COMMANDS = ['/quit', '/exit'];
 
@@ -235,10 +244,29 @@ export default function App() {
   const filteredCommands = getFilteredCommands(input);
   const hasHints = showHints && filteredCommands.length > 0;
 
+  // Combine header and history into a single list for Static
+  const staticItems: Array<Message | { id: number; isHeader: true }> = [
+    { id: -1, isHeader: true },
+    ...completedHistory
+  ];
+
   return (
     <>
-      <Static items={completedHistory}>
-        {(item) => <HistoryItem key={item.id} type={item.type} text={item.text} />}
+      <Static items={staticItems}>
+        {(item) => {
+          if ('isHeader' in item && item.isHeader) {
+            return (
+              <Box key={item.id} marginBottom={1}>
+                <Text color="cyan" bold>
+                  {INKER_ASCII_ART}
+                </Text>
+              </Box>
+            );
+          }
+          // TypeScript knows this is a Message at this point
+          const message = item as Message;
+          return <HistoryItem key={message.id} type={message.type} text={message.text} />;
+        }}
       </Static>
       {streamingItem && (
         <Box ref={streamingRef}>
