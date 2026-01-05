@@ -65,6 +65,9 @@ async function getModelAdapter(): Promise<ModelAdapter> {
   };
   
   cachedModel = igniteModel('google', model, config);
+  if (!cachedModel) {
+    throw new Error('Failed to initialize model');
+  }
   initializePlugins(cachedModel);
   
   return new RealModelAdapter(cachedModel);
