@@ -12,6 +12,8 @@ export default function HistoryItem({ type, text }: HistoryItemProps) {
     return <Text color="green">{text}</Text>;
   } else if (type === 'error') {
     return <Text color="red">{text}</Text>;
+  } else if (type === 'shell') {
+    return <Text color="yellow">{text}</Text>;
   } else {
     return <Text>{text}</Text>;
   }

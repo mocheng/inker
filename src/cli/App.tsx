@@ -214,6 +214,23 @@ export default function App() {
     setHistory(prev => [...prev, { id: getNextMessageId(), type: 'user', text: userMessage }]);
     setIsLoading(true);
 
+    // Handle bash command execution
+    if (userMessage.startsWith('!')) {
+      const command = userMessage.slice(1).trim();
+      const responseId = getNextMessageId();
+      
+      try {
+        const { execSync } = await import('child_process');
+        const output = execSync(command, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 });
+        setHistory(prev => [...prev, { id: responseId, type: 'shell', text: output }]);
+      } catch (error: any) {
+        const errorMsg = error.stderr || error.message || 'Command execution failed';
+        setHistory(prev => [...prev, { id: responseId, type: 'error', text: errorMsg }]);
+      }
+      setIsLoading(false);
+      return;
+    }
+
     // Add placeholder for streaming response
     const responseId = getNextMessageId();
     setStreamingId(responseId);
