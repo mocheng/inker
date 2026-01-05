@@ -244,29 +244,21 @@ export default function App() {
   const filteredCommands = getFilteredCommands(input);
   const hasHints = showHints && filteredCommands.length > 0;
 
-  // Combine header and history into a single list for Static
-  const staticItems: Array<Message | { id: number; isHeader: true }> = [
-    { id: -1, isHeader: true },
-    ...completedHistory
+  const staticItems = [
+    <Box key="header" marginBottom={1}>
+      <Text color="cyan" bold>
+        {INKER_ASCII_ART}
+      </Text>
+    </Box>,
+    ...completedHistory.map(item => (
+      <HistoryItem key={item.id} type={item.type} text={item.text} />
+    ))
   ];
 
   return (
     <>
       <Static items={staticItems}>
-        {(item) => {
-          if ('isHeader' in item && item.isHeader) {
-            return (
-              <Box key={item.id} marginBottom={1}>
-                <Text color="cyan" bold>
-                  {INKER_ASCII_ART}
-                </Text>
-              </Box>
-            );
-          }
-          // TypeScript knows this is a Message at this point
-          const message = item as Message;
-          return <HistoryItem key={message.id} type={message.type} text={message.text} />;
-        }}
+        {(item) => item}
       </Static>
       {streamingItem && (
         <Box ref={streamingRef}>
