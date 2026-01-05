@@ -60,7 +60,7 @@ async function getModelAdapter(): Promise<ModelAdapter> {
       tools: true,
       vision: false,
       reasoning: false,
-      caching: false
+      caching: true
     }
   };
   
