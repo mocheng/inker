@@ -6,6 +6,7 @@ import HistoryItem from './HistoryItem.js';
 import { sendMessage } from '../model/gemini.js';
 import { convertToLLMMessages } from '../model/context.js';
 import { loadInputHistory, saveInputHistory } from './inputHistory.js';
+import { getContextFiles } from '../model/contextManager.js';
 import type { Message } from './types.js';
 
 const INKER_ASCII_ART = `
@@ -18,7 +19,7 @@ const INKER_ASCII_ART = `
 `;
 
 const MIN_TERMINAL_MARGIN = 7;
-const COMMANDS = ['/quit', '/exit'];
+const COMMANDS = ['/quit', '/exit', '/context'];
 
 export default function App() {
   const [history, setHistory] = useState<Message[]>([]);
@@ -203,6 +204,21 @@ export default function App() {
     // Handle quit/exit commands
     if (userMessage === '/quit' || userMessage === '/exit') {
       exit();
+      return;
+    }
+
+    // Handle /context command
+    if (userMessage === '/context') {
+      const contextFiles = getContextFiles();
+      const responseId = getNextMessageId();
+      
+      if (contextFiles.length === 0) {
+        setHistory(prev => [...prev, { id: responseId, type: 'assistant', text: 'No files in context.' }]);
+      } else {
+        const fileList = contextFiles.map((file, i) => `${i + 1}. ${file}`).join('\n');
+        setHistory(prev => [...prev, { id: responseId, type: 'assistant', text: `Context files:\n${fileList}` }]);
+      }
+      setIsLoading(false);
       return;
     }
 
