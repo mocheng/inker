@@ -2,7 +2,39 @@
 
 This document describes how to create a new release for Inker.
 
-## Steps
+## Prerequisites
+
+Install GitHub CLI:
+```bash
+# macOS
+brew install gh
+
+# Or download from https://cli.github.com/
+```
+
+Login to GitHub CLI:
+```bash
+gh auth login
+```
+
+## Automated Release (Recommended)
+
+Use the release script:
+
+```bash
+./scripts/release.sh 0.0.2
+```
+
+This script will:
+1. Update package.json version
+2. Move unreleased changes in CHANGELOG.md to new version section
+3. Commit changes
+4. Create and push git tag
+5. Create GitHub release with changelog content
+
+## Manual Release
+
+If you prefer manual control:
 
 1. **Update CHANGELOG.md**
    - Move items from `[Unreleased]` section to a new version section
