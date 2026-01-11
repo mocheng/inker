@@ -3,7 +3,7 @@ import { Box, Text, Static, useStdout, measureElement, useInput, useApp } from '
 import TextInput from 'ink-text-input';
 import Progress from './Progress.js';
 import HistoryItem from './HistoryItem.js';
-import { sendMessage } from '../model/gemini.js';
+import { sendMessage } from '../model/llm.js';
 import { convertToLLMMessages } from '../model/context.js';
 import { loadInputHistory, saveInputHistory } from './inputHistory.js';
 import { getContextFiles } from '../model/contextManager.js';

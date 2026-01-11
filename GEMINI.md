@@ -14,10 +14,9 @@ The project follows a clean separation of concerns:
     *   `HistoryItem.tsx`: A component for rendering individual chat messages with color coding.
     *   `LoadingIcon.tsx`: An animated spinner component.
 *   **Model / Service Layer (`src/model/`)**: Manages the business logic and API interactions.
-    *   `gemini.ts`: Handles the communication with the Gemini API using the `multi-llm-ts` library. It loads configuration, initializes the model, and sends messages with streaming support.
+    *   `llm.ts`: Handles communication with LLM providers (Google Gemini, AWS Bedrock) using the Vercel AI SDK. It loads configuration, initializes the model, and sends messages with streaming support. Tools are defined inline using Zod schemas.
     *   `tracing.ts`: Provides OpenTelemetry tracing utilities (`withSpan`) for instrumentation.
-    *   `modelAdapter.ts`: Abstraction layer for model adapters (real and mock).
-    *   `plugins/BashPlugin.ts`: Tool plugin that allows the AI to execute bash commands.
+    *   `context.ts`: Converts UI messages to Vercel AI SDK message format.
 *   **Telemetry (`src/telemetry.ts`)**: OpenTelemetry SDK setup that exports traces to Genkit UI.
 *   **Configuration (`src/config/`)**: Application configuration management.
 
@@ -27,10 +26,11 @@ The project follows a clean separation of concerns:
 *   **`.env.example`**: A template for the required environment variables.
 *   **`src/cli/main.tsx`**: The executable entry point for the CLI.
 *   **`src/cli/App.tsx`**: The core application logic and UI layout.
-*   **`src/model/gemini.ts`**: The interface to the Gemini LLM with tracing.
+*   **`src/model/llm.ts`**: The interface to LLM providers (Gemini, Bedrock) with tracing.
 *   **`src/model/tracing.ts`**: OpenTelemetry tracing utilities.
 *   **`src/telemetry.ts`**: OpenTelemetry SDK configuration for Genkit.
 *   **`vitest.config.ts`**: Configuration for the Vitest test runner.
+*   **`docs/design/`**: Important design decisions and architecture changes (files named `YYYY-MM-DD-brief-description.md`).
 
 ## Building and Running
 
@@ -51,7 +51,22 @@ The project follows a clean separation of concerns:
     ```bash
     cp .env.example .env
     ```
-    Open `.env` and add your `GEMINI_API_KEY`. You can also specify the `GEMINI_MODEL` (defaults to `gemini-2.0-flash`).
+    
+    For Google Gemini:
+    ```env
+    LLM_PROVIDER=google
+    GEMINI_API_KEY=your_api_key_here
+    GEMINI_MODEL=gemini-2.0-flash
+    ```
+    
+    For AWS Bedrock:
+    ```env
+    LLM_PROVIDER=bedrock
+    AWS_REGION=us-east-1
+    BEDROCK_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
+    ```
+    
+    Note: AWS credentials are read from `~/.aws/credentials`. Configure with `aws configure`.
 
 ### Build
 
@@ -99,6 +114,6 @@ The application uses OpenTelemetry to instrument LLM calls:
 *   **UI Library**: Ink (for rendering React components to the terminal).
 *   **Input Handling**: `ink-text-input` for text input with cursor support.
 *   **State Management**: Local component state (`useState`) is used for managing chat history and input.
-*   **API Integration**: `multi-llm-ts` is used as an abstraction layer for the Gemini API.
+*   **API Integration**: Vercel AI SDK is used for unified LLM provider access (Google Gemini, AWS Bedrock).
 *   **Tracing**: OpenTelemetry with custom Genkit exporter.
 *   **Testing**: Vitest with `ink-testing-library` for component testing.

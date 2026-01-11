@@ -11,6 +11,9 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^1.0.9",
+    "@ai-sdk/google": "^1.0.10",
+    "@aws-sdk/credential-providers": "^3.966.0",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/api-logs": "^0.208.0",
     "@opentelemetry/auto-instrumentations-node": "^0.67.3",
@@ -18,13 +21,14 @@
     "@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
     "@opentelemetry/sdk-logs": "^0.208.0",
     "@opentelemetry/sdk-node": "^0.208.0",
+    "ai": "^4.0.38",
     "dotenv": "^17.2.3",
     "ink": "^6.6.0",
     "ink-text-input": "^6.0.0",
     "lodash-es": "^4.17.22",
-    "multi-llm-ts": "^4.6.2",
     "react": "^19.2.3",
-    "toml": "^3.0.0"
+    "toml": "^3.0.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.1",

@@ -1,8 +1,8 @@
-import { Message as LLMMessage } from 'multi-llm-ts';
+import { CoreMessage } from 'ai';
 import type { Message as UIMessage } from '../cli/types.js';
 
-export function convertToLLMMessages(history: UIMessage[]): LLMMessage[] {
+export function convertToLLMMessages(history: UIMessage[]): CoreMessage[] {
   return history
     .filter(msg => msg.type === 'user' || msg.type === 'assistant')
-    .map(msg => new LLMMessage(msg.type as 'user' | 'assistant', msg.text));
+    .map(msg => ({ role: msg.type as 'user' | 'assistant', content: msg.text }));
 }

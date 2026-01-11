@@ -4,8 +4,8 @@ A minimalist CLI coding tool powered by Google Gemini AI, built with React and I
 
 ## Features
 
-- 🤖 **Google Gemini AI Integration** - Chat with AI directly from your terminal
-- 🛠️ **Tool Support** - AI can execute bash commands via tool calls
+- 🤖 **Multi-Provider AI Integration** - Support for Google Gemini and AWS Bedrock via Vercel AI SDK
+- 🛠️ **Tool Support** - AI can execute bash commands, read/write/edit files, git operations, search code, and interact with GitHub PRs
 - ⌨️ **Interactive Input** - Text input with visible cursor using ink-text-input
 - 🎨 **Color-Coded Messages** - User (green), AI (white), errors (red)
 - ⏱️ **Animated Progress** - Loading spinner with elapsed time counter
@@ -17,7 +17,8 @@ A minimalist CLI coding tool powered by Google Gemini AI, built with React and I
 ## Prerequisites
 
 - Node.js 18+
-- Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
+- Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey)) OR
+- AWS Bedrock access with IAM credentials
 
 ## Installation
 
@@ -35,11 +36,20 @@ npm install
 Create a `.env` file in the project root:
 
 ```env
+LLM_PROVIDER=google
 GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-2.0-flash
 ```
 
-See `.env.example` for reference.
+For AWS Bedrock:
+
+```env
+LLM_PROVIDER=bedrock
+AWS_REGION=us-east-1
+BEDROCK_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
+```
+
+See `.env.example` for reference and `docs/design/2026-01-11-multi-provider-setup.md` for detailed setup instructions.
 
 ## Usage
 
@@ -126,13 +136,15 @@ inker/
 │   │   ├── main.tsx
 │   │   └── __tests__/
 │   ├── model/            # API integration
-│   │   ├── gemini.ts     # Gemini API with tracing
+│   │   ├── llm.ts        # LLM API with tracing (multi-provider)
 │   │   ├── tracing.ts    # OpenTelemetry tracing utilities
 │   │   ├── modelAdapter.ts
 │   │   └── plugins/
 │   │       └── BashPlugin.ts
 │   ├── config/           # Configuration
 │   └── telemetry.ts      # OpenTelemetry SDK setup
+├── docs/
+│   └── design/           # Design decisions (YYYY-MM-DD-brief-name.md)
 ├── dist/                 # Compiled output
 ├── .env                  # Environment config (gitignored)
 ├── .env.example          # Config template
@@ -140,13 +152,19 @@ inker/
 └── package.json
 ```
 
+## Documentation
+
+- **`docs/design/`** - Important design decisions and architecture changes
+  - Files are named with date prefix: `YYYY-MM-DD-brief-description.md`
+  - Examples: `2026-01-11-multi-provider-setup.md`, `2026-01-04-refactoring-summary.md`
+
 ## Tech Stack
 
 - [React](https://react.dev/) - UI framework
 - [Ink](https://github.com/vadimdemedes/ink) - React for CLIs
 - [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input component
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
-- [multi-llm-ts](https://github.com/nbonamy/multi-llm-ts) - LLM API abstraction
+- [Vercel AI SDK](https://sdk.vercel.ai/) - Unified AI provider interface
 - [OpenTelemetry](https://opentelemetry.io/) - Distributed tracing
 - [Jaeger](https://www.jaegertracing.io/) - Trace visualization
 - [SigNoz](https://signoz.io/) - Full-stack observability platform
