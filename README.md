@@ -6,7 +6,8 @@ A minimalist CLI coding tool powered by Google Gemini AI, built with React and I
 
 - 🤖 **Multi-Provider AI Integration** - Support for Google Gemini and AWS Bedrock via Vercel AI SDK
 - 🛠️ **Tool Support** - AI can execute bash commands, read/write/edit files, git operations, search code, and interact with GitHub PRs
-- ⌨️ **Interactive Input** - Text input with visible cursor using ink-text-input
+- 💬 **Slash Commands** - Extensible command system (/help, /quit, /context)
+- ⌨️ **Interactive Input** - Text input with visible cursor and command autocomplete
 - 🎨 **Color-Coded Messages** - User (green), AI (white), errors (red)
 - ⏱️ **Animated Progress** - Loading spinner with elapsed time counter
 - 📜 **Streaming Responses** - Real-time AI response streaming
@@ -67,6 +68,14 @@ npm start
 - **Backspace/Delete** to edit
 - **Enter** to send message
 - **Ctrl+C** to exit
+
+### Slash Commands
+
+- `/help` - Show all available commands
+- `/quit` or `/exit` - Exit the application
+- `/context` - Show files in context
+
+Type `/` to see autocomplete suggestions for all commands.
 
 ## Observability
 
@@ -129,6 +138,13 @@ npm run test:ui       # UI mode
 inker/
 ├── src/
 │   ├── cli/              # UI components
+│   │   ├── commands/     # Slash command system
+│   │   │   ├── types.ts
+│   │   │   ├── CommandRegistry.ts
+│   │   │   ├── quit.ts
+│   │   │   ├── context.ts
+│   │   │   ├── help.ts
+│   │   │   └── index.ts
 │   │   ├── App.tsx
 │   │   ├── Progress.tsx
 │   │   ├── LoadingIcon.tsx
@@ -136,11 +152,10 @@ inker/
 │   │   ├── main.tsx
 │   │   └── __tests__/
 │   ├── model/            # API integration
+│   │   ├── tools/        # LLM tools (bash, file ops, git, etc.)
 │   │   ├── llm.ts        # LLM API with tracing (multi-provider)
 │   │   ├── tracing.ts    # OpenTelemetry tracing utilities
-│   │   ├── modelAdapter.ts
-│   │   └── plugins/
-│   │       └── BashPlugin.ts
+│   │   └── context.ts
 │   ├── config/           # Configuration
 │   └── telemetry.ts      # OpenTelemetry SDK setup
 ├── docs/

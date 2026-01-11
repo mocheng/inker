@@ -7,6 +7,7 @@ import { sendMessage } from '../model/llm.js';
 import { convertToLLMMessages } from '../model/context.js';
 import { loadInputHistory, saveInputHistory } from './inputHistory.js';
 import { getContextFiles } from '../model/contextManager.js';
+import { commandRegistry } from './commands/index.js';
 import type { Message } from './types.js';
 
 const INKER_ASCII_ART = `
@@ -19,7 +20,6 @@ const INKER_ASCII_ART = `
 `;
 
 const MIN_TERMINAL_MARGIN = 7;
-const COMMANDS = ['/quit', '/exit', '/context'];
 
 export default function App() {
   const [history, setHistory] = useState<Message[]>([]);
@@ -43,7 +43,8 @@ export default function App() {
     if (!inputValue.startsWith('/')) {
       return [];
     }
-    return COMMANDS.filter(cmd => cmd.startsWith(inputValue));
+    const allCommands = commandRegistry.getAllCommandsWithAliases();
+    return allCommands.map(cmd => `/${cmd}`).filter(cmd => cmd.startsWith(inputValue));
   }, []);
 
   useEffect(() => {
@@ -99,10 +100,10 @@ export default function App() {
       setInputKey(prev => prev + 1); // Reset TextInput to position cursor at end
       setShowHints(false);
       setSelectedHintIndex(0);
-      // Reset the flag after a short delay to allow state update
+      // Reset the flag after user can press Enter again
       setTimeout(() => {
         justSelectedHintRef.current = false;
-      }, 0);
+      }, 100);
     }
   }, [selectedHintIndex]);
 
@@ -110,14 +111,18 @@ export default function App() {
     const filteredCommands = getFilteredCommands(input);
     const hasHints = showHints && filteredCommands.length > 0;
     
+    if (hasHints && key.return) {
+      // When hints are shown and Enter is pressed, select hint and prevent submit
+      handleSelectHint(filteredCommands);
+      return;
+    }
+    
     if (hasHints) {
       // When hints are shown, arrow keys navigate hints
       if (key.upArrow) {
         handleHintNavigation('up', filteredCommands);
       } else if (key.downArrow) {
         handleHintNavigation('down', filteredCommands);
-      } else if (key.return) {
-        handleSelectHint(filteredCommands);
       }
     } else {
       // When hints are not shown, arrow keys navigate history
@@ -191,8 +196,7 @@ export default function App() {
   const handleSubmit = useCallback(async () => {
     // If we just selected a hint, don't submit - let user press ENTER again
     if (justSelectedHintRef.current) {
-      justSelectedHintRef.current = false;
-      return;
+      return; // Don't reset the flag here
     }
 
     if (!input.trim() || isLoading) {
@@ -201,24 +205,23 @@ export default function App() {
 
     const userMessage = input.trim();
     
-    // Handle quit/exit commands
-    if (userMessage === '/quit' || userMessage === '/exit') {
-      exit();
-      return;
-    }
-
-    // Handle /context command
-    if (userMessage === '/context') {
-      const contextFiles = getContextFiles();
-      const responseId = getNextMessageId();
-      
-      if (contextFiles.length === 0) {
-        setHistory(prev => [...prev, { id: responseId, type: 'assistant', text: 'No files in context.' }]);
-      } else {
-        const fileList = contextFiles.map((file, i) => `${i + 1}. ${file}`).join('\n');
-        setHistory(prev => [...prev, { id: responseId, type: 'assistant', text: `Context files:\n${fileList}` }]);
-      }
-      setIsLoading(false);
+    // Try to execute as a command
+    const commandContext = {
+      input: userMessage,
+      args: [],
+      setHistory,
+      setIsLoading,
+      exit,
+      getNextMessageId,
+      getContextFiles,
+    };
+    
+    const wasCommand = await commandRegistry.execute(userMessage, commandContext);
+    if (wasCommand) {
+      // Clear input for commands
+      setInput('');
+      setShowHints(false);
+      setSelectedHintIndex(0);
       return;
     }
 

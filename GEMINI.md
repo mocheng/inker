@@ -10,11 +10,13 @@ The project follows a clean separation of concerns:
     *   Built with **React** and **Ink**.
     *   `main.tsx`: The entry point that mounts the React application.
     *   `App.tsx`: The main component managing the chat history, user input, and application state.
+    *   `commands/`: Extensible slash command system with CommandRegistry.
     *   `Progress.tsx`: A component for displaying loading indicators during API calls.
     *   `HistoryItem.tsx`: A component for rendering individual chat messages with color coding.
     *   `LoadingIcon.tsx`: An animated spinner component.
 *   **Model / Service Layer (`src/model/`)**: Manages the business logic and API interactions.
-    *   `llm.ts`: Handles communication with LLM providers (Google Gemini, AWS Bedrock) using the Vercel AI SDK. It loads configuration, initializes the model, and sends messages with streaming support. Tools are defined inline using Zod schemas.
+    *   `llm.ts`: Handles communication with LLM providers (Google Gemini, AWS Bedrock) using the Vercel AI SDK. It loads configuration, initializes the model, and sends messages with streaming support.
+    *   `tools/`: LLM tools (bash, file operations, git, grep, glob, GitHub PR) defined using Zod schemas.
     *   `tracing.ts`: Provides OpenTelemetry tracing utilities (`withSpan`) for instrumentation.
     *   `context.ts`: Converts UI messages to Vercel AI SDK message format.
 *   **Telemetry (`src/telemetry.ts`)**: OpenTelemetry SDK setup that exports traces to Genkit UI.
@@ -26,7 +28,9 @@ The project follows a clean separation of concerns:
 *   **`.env.example`**: A template for the required environment variables.
 *   **`src/cli/main.tsx`**: The executable entry point for the CLI.
 *   **`src/cli/App.tsx`**: The core application logic and UI layout.
+*   **`src/cli/commands/`**: Extensible slash command system with registry pattern.
 *   **`src/model/llm.ts`**: The interface to LLM providers (Gemini, Bedrock) with tracing.
+*   **`src/model/tools/`**: LLM tools for bash, file operations, git, code search, GitHub PRs.
 *   **`src/model/tracing.ts`**: OpenTelemetry tracing utilities.
 *   **`src/telemetry.ts`**: OpenTelemetry SDK configuration for Genkit.
 *   **`vitest.config.ts`**: Configuration for the Vitest test runner.
