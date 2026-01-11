@@ -4,7 +4,7 @@ import { readFileSync } from 'fs';
 
 export const readFileTool: Tool = {
   description: 'Read the contents of a file',
-  parameters: z.object({
+  inputSchema: z.object({
     path: z.string().describe('The path to the file to read'),
   }),
   execute: async ({ path }) => {

@@ -1,4 +1,4 @@
-import { streamText, LanguageModel, CoreMessage } from 'ai';
+import { streamText, LanguageModel, ModelMessage, stepCountIs } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
@@ -13,7 +13,7 @@ dotenv.config({ quiet: true });
 interface ProviderConfig {
   provider: string;
   modelName: string;
-  model: LanguageModel;
+  model: any; // Use any to accommodate different model versions
 }
 
 let cachedConfig: ProviderConfig | null = null;
@@ -39,10 +39,8 @@ function getProviderConfig(): ProviderConfig {
     const modelName = process.env.BEDROCK_MODEL || 'anthropic.claude-3-5-sonnet-20241022-v2:0';
     
     const bedrock = createAmazonBedrock({ 
-      bedrockOptions: {
-        region,
-        credentials: fromNodeProviderChain()
-      }
+      region,
+      credentialProvider: fromNodeProviderChain()
     });
     cachedConfig = { provider, modelName, model: bedrock(modelName) };
     return cachedConfig;
@@ -53,7 +51,7 @@ function getProviderConfig(): ProviderConfig {
 
 export async function sendMessage(
   message: string,
-  conversationHistory: CoreMessage[],
+  conversationHistory: ModelMessage[],
   onChunk: (chunk: string) => void,
   abortSignal?: AbortSignal
 ): Promise<string> {
@@ -70,7 +68,7 @@ export async function sendMessage(
     'gen_ai.request.model': modelName,
     'gen_ai.operation.name': 'chat'
   }, async (span) => {
-    const messages: CoreMessage[] = [
+    const messages: ModelMessage[] = [
       { role: 'system', content: getSystemPrompt() },
       ...conversationHistory,
       { role: 'user', content: message }
@@ -102,28 +100,29 @@ export async function sendMessage(
         model,
         messages,
         tools,
-        maxSteps: 10,
+        stopWhen: stepCountIs(10),
         abortSignal,
       });
       
-      let hasReceivedData = false;
-      
-      // Stream text chunks
-      for await (const textDelta of result.textStream) {
-        hasReceivedData = true;
-        fullResponse += textDelta;
-        buffer += textDelta;
-        flushBuffer();
-      }
-      
-      if (!hasReceivedData && fullResponse === '') {
-        throw new Error('No response received from LLM. Check your AWS region and model configuration.');
+      // Stream text deltas to UI
+      for await (const part of result.fullStream) {
+        if (part.type === 'text-delta') {
+          buffer += part.text;
+          flushBuffer();
+        }
       }
       
       flushBuffer.flush();
       
-      span.setAttribute('output-json', JSON.stringify({ response: fullResponse }));
+      // Get complete text including tool results
+      fullResponse = await result.text;
       
+      if (!fullResponse) {
+        throw new Error('No response received from LLM. Check your AWS region and model configuration.');
+      }
+
+      span.setAttribute('output-json', JSON.stringify({ response: fullResponse }));
+
       return fullResponse;
     } catch (error: any) {
       span.setAttribute('error', true);

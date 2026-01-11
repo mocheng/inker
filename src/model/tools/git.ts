@@ -7,7 +7,7 @@ const execAsync = promisify(exec);
 
 export const gitTool: Tool = {
   description: 'Execute git commands and return the output',
-  parameters: z.object({
+  inputSchema: z.object({
     args: z.string().describe('The git command arguments (e.g., "status", "log --oneline -5")'),
     cwd: z.string().optional().describe('Optional working directory to run the git command in'),
   }),

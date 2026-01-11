@@ -7,7 +7,7 @@ const execAsync = promisify(exec);
 
 export const githubPRTool: Tool = {
   description: 'Interact with GitHub Pull Requests using the gh CLI. Supports viewing PR details, diffs, changed files, comments, and CI status.',
-  parameters: z.object({
+  inputSchema: z.object({
     action: z.enum(['view', 'diff', 'files', 'comments', 'checks']).describe('The action to perform'),
     pr_number: z.number().optional().describe('The PR number. If omitted, uses the current branch\'s PR.'),
     repo: z.string().optional().describe('Repository in owner/repo format. Defaults to current repository.'),

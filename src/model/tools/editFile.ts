@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from 'fs';
 
 export const editFileTool: Tool = {
   description: 'Edit a file by replacing a specific string with new content. The old_string must match exactly.',
-  parameters: z.object({
+  inputSchema: z.object({
     path: z.string().describe('The path to the file to edit'),
     old_string: z.string().describe('The exact string to search for and replace (must be unique in the file)'),
     new_string: z.string().describe('The string to replace old_string with'),

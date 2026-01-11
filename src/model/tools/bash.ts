@@ -7,7 +7,7 @@ const execAsync = promisify(exec);
 
 export const bashTool: Tool = {
   description: 'Execute bash commands and return the output',
-  parameters: z.object({
+  inputSchema: z.object({
     command: z.string().describe('The bash command to execute'),
   }),
   execute: async ({ command }) => {

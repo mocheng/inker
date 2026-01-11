@@ -4,7 +4,7 @@ import { writeFileSync } from 'fs';
 
 export const writeFileTool: Tool = {
   description: 'Write content to a file',
-  parameters: z.object({
+  inputSchema: z.object({
     path: z.string().describe('The path to the file to write'),
     content: z.string().describe('The content to write to the file'),
   }),

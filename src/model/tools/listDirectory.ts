@@ -4,7 +4,7 @@ import { readdirSync, statSync } from 'fs';
 
 export const listDirectoryTool: Tool = {
   description: 'List the contents of a directory',
-  parameters: z.object({
+  inputSchema: z.object({
     path: z.string().describe('The path to the directory to list'),
   }),
   execute: async ({ path }) => {

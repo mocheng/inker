@@ -7,7 +7,7 @@ const execAsync = promisify(exec);
 
 export const globTool: Tool = {
   description: 'Find files matching a glob pattern',
-  parameters: z.object({
+  inputSchema: z.object({
     pattern: z.string().describe('The glob pattern to match files (e.g., "**/*.ts")'),
     path: z.string().optional().describe('The directory to search in (default: current directory)'),
     max_results: z.number().optional().describe('Maximum number of results to return (default: 100)'),
