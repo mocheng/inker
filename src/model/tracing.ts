@@ -62,6 +62,15 @@ export function logWithSpanCorrelation(
   });
 }
 
+/**
+ * Starts a new span with the given name and attributes, executes the provided function within that span,
+ * and ends the span after the function completes. If the function throws an error, the error is recorded in the span.
+ *
+ * @param name The name of the span
+ * @param attributes Attributes to set on the span
+ * @param fn The function to execute within the span
+ * @returns The result of the function
+ */
 export async function withSpan<T>(
   name: string,
   attributes: Record<string, any>,
