@@ -1,8 +1,8 @@
-import { CoreTool } from 'ai';
+import { Tool } from 'ai';
 import { z } from 'zod';
 import { readFileSync } from 'fs';
 
-export const readFileTool: CoreTool = {
+export const readFileTool: Tool = {
   description: 'Read the contents of a file',
   parameters: z.object({
     path: z.string().describe('The path to the file to read'),

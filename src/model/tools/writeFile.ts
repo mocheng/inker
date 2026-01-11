@@ -1,8 +1,8 @@
-import { CoreTool } from 'ai';
+import { Tool } from 'ai';
 import { z } from 'zod';
 import { writeFileSync } from 'fs';
 
-export const writeFileTool: CoreTool = {
+export const writeFileTool: Tool = {
   description: 'Write content to a file',
   parameters: z.object({
     path: z.string().describe('The path to the file to write'),

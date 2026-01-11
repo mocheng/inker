@@ -1,11 +1,11 @@
-import { CoreTool } from 'ai';
+import { Tool } from 'ai';
 import { z } from 'zod';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-export const grepTool: CoreTool = {
+export const grepTool: Tool = {
   description: 'Search for a pattern in files using ripgrep (rg). Returns matching lines with file paths and line numbers.',
   parameters: z.object({
     pattern: z.string().describe('The regex pattern to search for'),

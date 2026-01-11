@@ -1,11 +1,11 @@
-import { CoreTool } from 'ai';
+import { Tool } from 'ai';
 import { z } from 'zod';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-export const globTool: CoreTool = {
+export const globTool: Tool = {
   description: 'Find files matching a glob pattern',
   parameters: z.object({
     pattern: z.string().describe('The glob pattern to match files (e.g., "**/*.ts")'),

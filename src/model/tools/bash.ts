@@ -1,11 +1,11 @@
-import { CoreTool } from 'ai';
+import { Tool } from 'ai';
 import { z } from 'zod';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-export const bashTool: CoreTool = {
+export const bashTool: Tool = {
   description: 'Execute bash commands and return the output',
   parameters: z.object({
     command: z.string().describe('The bash command to execute'),

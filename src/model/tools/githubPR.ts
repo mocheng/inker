@@ -1,11 +1,11 @@
-import { CoreTool } from 'ai';
+import { Tool } from 'ai';
 import { z } from 'zod';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-export const githubPRTool: CoreTool = {
+export const githubPRTool: Tool = {
   description: 'Interact with GitHub Pull Requests using the gh CLI. Supports viewing PR details, diffs, changed files, comments, and CI status.',
   parameters: z.object({
     action: z.enum(['view', 'diff', 'files', 'comments', 'checks']).describe('The action to perform'),

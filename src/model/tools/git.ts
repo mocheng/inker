@@ -1,11 +1,11 @@
-import { CoreTool } from 'ai';
+import { Tool } from 'ai';
 import { z } from 'zod';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-export const gitTool: CoreTool = {
+export const gitTool: Tool = {
   description: 'Execute git commands and return the output',
   parameters: z.object({
     args: z.string().describe('The git command arguments (e.g., "status", "log --oneline -5")'),

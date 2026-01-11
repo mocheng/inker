@@ -1,8 +1,8 @@
-import { CoreTool } from 'ai';
+import { Tool } from 'ai';
 import { z } from 'zod';
 import { readFileSync, writeFileSync } from 'fs';
 
-export const editFileTool: CoreTool = {
+export const editFileTool: Tool = {
   description: 'Edit a file by replacing a specific string with new content. The old_string must match exactly.',
   parameters: z.object({
     path: z.string().describe('The path to the file to edit'),

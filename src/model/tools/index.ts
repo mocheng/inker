@@ -1,4 +1,4 @@
-import { CoreTool } from 'ai';
+import { Tool } from 'ai';
 import { bashTool } from './bash.js';
 import { readFileTool } from './readFile.js';
 import { writeFileTool } from './writeFile.js';
@@ -9,7 +9,7 @@ import { grepTool } from './grep.js';
 import { globTool } from './glob.js';
 import { githubPRTool } from './githubPR.js';
 
-export const tools: Record<string, CoreTool> = {
+export const tools: Record<string, Tool> = {
   bash: bashTool,
   read_file: readFileTool,
   write_file: writeFileTool,
