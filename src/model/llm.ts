@@ -54,7 +54,8 @@ function getProviderConfig(): ProviderConfig {
 export async function sendMessage(
   message: string,
   conversationHistory: CoreMessage[],
-  onChunk: (chunk: string) => void
+  onChunk: (chunk: string) => void,
+  abortSignal?: AbortSignal
 ): Promise<string> {
   const { provider, modelName, model } = getProviderConfig();
   
@@ -102,6 +103,7 @@ export async function sendMessage(
         messages,
         tools,
         maxSteps: 10,
+        abortSignal,
       });
       
       let hasReceivedData = false;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Box, Text, Static, useStdout, measureElement, useInput, useApp } from 'ink';
+import { Box, Text, Static, useStdout, measureElement, useInput, useApp, useStdin } from 'ink';
 import TextInput from 'ink-text-input';
 import Progress from './Progress.js';
 import HistoryItem from './HistoryItem.js';
@@ -34,7 +34,9 @@ export default function App() {
   const justSelectedHintRef = useRef<boolean>(false);
   const nextMessageIdRef = useRef<number>(0);
   const streamingRef = useRef<React.ElementRef<typeof Box> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const { stdout } = useStdout();
+  const { stdin, setRawMode } = useStdin();
   const { exit } = useApp();
   const terminalHeight = stdout?.rows || 24;
 
@@ -108,6 +110,19 @@ export default function App() {
   }, [selectedHintIndex]);
 
   useInput((_input, key) => {
+    // Handle Ctrl+C to abort LLM operation or exit app
+    if (key.ctrl && _input === 'c') {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        setIsLoading(false);
+        setStreamingId(null);
+        return; // Don't exit, just abort
+      }
+      // If no active LLM operation, exit the app
+      exit();
+      return;
+    }
+
     const filteredCommands = getFilteredCommands(input);
     const hasHints = showHints && filteredCommands.length > 0;
     
@@ -255,6 +270,8 @@ export default function App() {
     setStreamingId(responseId);
     setHistory(prev => [...prev, { id: responseId, type: 'assistant', text: '' }]);
 
+    abortControllerRef.current = new AbortController();
+
     try {
       let fullText = '';
       const llmHistory = convertToLLMMessages(history);
@@ -262,7 +279,7 @@ export default function App() {
       await sendMessage(userMessage, llmHistory, (chunk) => {
         fullText += chunk;
         handleStreamingChunk(responseId, chunk, fullText);
-      });
+      }, abortControllerRef.current.signal);
       
       // Final update with complete text
       updateStreamingMessage(responseId, fullText);
@@ -272,6 +289,8 @@ export default function App() {
       handleError(responseId, error);
       setStreamingId(null);
       setIsLoading(false);
+    } finally {
+      abortControllerRef.current = null;
     }
   }, [input, isLoading, history, getNextMessageId, handleStreamingChunk, updateStreamingMessage, handleError, exit]);
 
