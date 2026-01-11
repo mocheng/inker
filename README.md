@@ -172,6 +172,8 @@ inker/
 - **`docs/design/`** - Important design decisions and architecture changes
   - Files are named with date prefix: `YYYY-MM-DD-brief-description.md`
   - Examples: `2026-01-11-multi-provider-setup.md`, `2026-01-04-refactoring-summary.md`
+- **`docs/RELEASE.md`** - Release process and versioning guidelines
+- **`CHANGELOG.md`** - Version history and notable changes
 
 ## Tech Stack
 
