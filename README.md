@@ -10,7 +10,7 @@ A minimalist CLI coding tool powered by Google Gemini AI, built with React and I
 - 🎨 **Color-Coded Messages** - User (green), AI (white), errors (red)
 - ⏱️ **Animated Progress** - Loading spinner with elapsed time counter
 - 📜 **Streaming Responses** - Real-time AI response streaming
-- 📊 **Observability** - OpenTelemetry tracing with Jaeger or Genkit UI
+- 📊 **Observability** - Full OpenTelemetry tracing support (Jaeger, SigNoz, etc.)
 - ⚡ **Performance Optimized** - Static rendering prevents unnecessary re-renders
 - 🧪 **Tested** - Unit tests with Vitest and ink-testing-library
 
@@ -60,9 +60,9 @@ npm start
 
 ## Observability
 
-The app exports OpenTelemetry traces. You can use either **Jaeger** or **Genkit UI** to visualize them.
+The app exports OpenTelemetry traces and can be used with any OTLP-compatible backend.
 
-### Option 1: Jaeger (Default)
+### Option 1: Jaeger
 
 ```bash
 # 1. Start Jaeger
@@ -75,25 +75,23 @@ docker run -d --name jaeger \
 # 2. Run inker (uses Jaeger by default)
 npm start
 
-# 3. View traces
-open http://localhost:16686
+# 3. View traces in Jaeger UI
 ```
 
-Select "inker" from the Service dropdown to see traces.
+### Option 2: SigNoz (Recommended)
 
-### Option 2: Genkit UI
-
-Genkit provides a specialized UI for AI/LLM observability with Input/Output/Context tabs.
+SigNoz is a full-stack observability platform with native OpenTelemetry support.
 
 ```bash
-# 1. Start Genkit dev server
-cd genkit && npm run dev
+# 1. Start SigNoz
+git clone -b main https://github.com/SigNoz/signoz.git
+cd signoz/deploy
+./install.sh
 
-# 2. Run inker with Genkit endpoint
-OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4033/api/otlp npm start
+# 2. Run inker with SigNoz endpoint
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 npm start
 
-# 3. View traces
-open http://localhost:4000
+# 3. View traces in SigNoz UI
 ```
 
 ### Environment Variables
@@ -135,7 +133,6 @@ inker/
 │   │       └── BashPlugin.ts
 │   ├── config/           # Configuration
 │   └── telemetry.ts      # OpenTelemetry SDK setup
-├── genkit/               # Genkit dev server for observability
 ├── dist/                 # Compiled output
 ├── .env                  # Environment config (gitignored)
 ├── .env.example          # Config template
@@ -152,7 +149,7 @@ inker/
 - [multi-llm-ts](https://github.com/nbonamy/multi-llm-ts) - LLM API abstraction
 - [OpenTelemetry](https://opentelemetry.io/) - Distributed tracing
 - [Jaeger](https://www.jaegertracing.io/) - Trace visualization
-- [Genkit](https://firebase.google.com/docs/genkit) - AI observability UI
+- [SigNoz](https://signoz.io/) - Full-stack observability platform
 - [Vitest](https://vitest.dev/) - Testing framework
 - [dotenv](https://github.com/motdotla/dotenv) - Environment configuration
 
