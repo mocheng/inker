@@ -1,6 +1,7 @@
 import { streamText, LanguageModel, ModelMessage, stepCountIs } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { createAnthropic } from '@ai-sdk/anthropic';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import dotenv from 'dotenv';
 import { throttle } from 'lodash-es';
@@ -46,7 +47,20 @@ function getProviderConfig(): ProviderConfig {
     return cachedConfig;
   }
   
-  throw new Error(`Unsupported LLM_PROVIDER: ${provider}. Supported: google, bedrock`);
+  if (provider === 'minimax') {
+    const apiKey = process.env.MINIMAX_API_KEY;
+    const modelName = process.env.MINIMAX_MODEL || 'MiniMax-M2.1';
+    if (!apiKey) throw new Error('MINIMAX_API_KEY not found in .env file');
+    
+    const minimax = createAnthropic({ 
+      apiKey,
+      baseURL: 'https://api.minimaxi.com/anthropic/v1'
+    });
+    cachedConfig = { provider, modelName, model: minimax(modelName) };
+    return cachedConfig;
+  }
+  
+  throw new Error(`Unsupported LLM_PROVIDER: ${provider}. Supported: google, bedrock, minimax`);
 }
 
 export async function sendMessage(
