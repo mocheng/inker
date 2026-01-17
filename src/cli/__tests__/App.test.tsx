@@ -38,4 +38,17 @@ describe('App', () => {
     // Input prompt should be visible
     expect(output).toContain('>');
   });
+
+  it('renders without crashing', () => {
+    const { unmount } = render(<App />);
+    expect(() => unmount()).not.toThrow();
+  });
+
+  it('initializes with correct state', () => {
+    const { lastFrame } = render(<App />);
+    const output = lastFrame();
+    // Should have header and input
+    expect(output).toBeTruthy();
+    expect(output.length).toBeGreaterThan(0);
+  });
 });
