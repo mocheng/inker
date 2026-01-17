@@ -73,8 +73,8 @@ describe('context command', () => {
     expect(mockContext.setHistory).toHaveBeenCalled();
     expect(mockContext.setIsLoading).toHaveBeenCalledWith(false);
     
-    const setHistoryFn = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-    const newHistory = setHistoryFn([]);
+    const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
+    const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
     
     expect(newHistory).toHaveLength(1);
     expect(newHistory[0].type).toBe('assistant');
@@ -90,8 +90,8 @@ describe('context command', () => {
     
     contextCommand.execute(mockContext);
     
-    const setHistoryFn = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-    const newHistory = setHistoryFn([]);
+    const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
+    const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
     
     expect(newHistory[0].text).toContain('Context files:');
     expect(newHistory[0].text).toContain('1. /path/to/file1.ts');
@@ -107,8 +107,8 @@ describe('context command', () => {
     
     contextCommand.execute(mockContext);
     
-    const setHistoryFn = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-    const newHistory = setHistoryFn([]);
+    const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
+    const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
     
     const lines = newHistory[0].text.split('\n');
     expect(lines[1]).toBe('1. /file1.ts');

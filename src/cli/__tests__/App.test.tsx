@@ -49,6 +49,8 @@ describe('App', () => {
     const output = lastFrame();
     // Should have header and input
     expect(output).toBeTruthy();
-    expect(output.length).toBeGreaterThan(0);
+    if (output) {
+      expect(output.length).toBeGreaterThan(0);
+    }
   });
 });

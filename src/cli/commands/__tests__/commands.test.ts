@@ -66,7 +66,7 @@ describe('Commands', () => {
       expect(mockContext.setIsLoading).toHaveBeenCalledWith(false);
       
       const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-      const newHistory = setHistoryCall([]);
+      const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
       expect(newHistory).toEqual([
         { id: 1, type: 'assistant', text: 'No files in context.' }
       ]);
@@ -98,7 +98,7 @@ describe('Commands', () => {
       contextCommand.execute(mockContext);
       
       const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-      const newHistory = setHistoryCall([]);
+      const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
       expect(newHistory[0].text).toContain('Context files:');
       expect(newHistory[0].text).toContain('1. /path/to/file1.ts');
       expect(newHistory[0].text).toContain('2. /path/to/file2.ts');
@@ -147,7 +147,7 @@ describe('Commands', () => {
       expect(mockContext.setIsLoading).toHaveBeenCalledWith(false);
       
       const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-      const newHistory = setHistoryCall([]);
+      const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
       expect(newHistory[0].text).toContain('Available commands:');
       expect(newHistory[0].text).toContain('/help');
       expect(newHistory[0].text).toContain('/quit');

@@ -50,8 +50,8 @@ describe('help command', () => {
     expect(mockContext.setHistory).toHaveBeenCalled();
     expect(mockContext.setIsLoading).toHaveBeenCalledWith(false);
     
-    const setHistoryFn = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-    const newHistory = setHistoryFn([]);
+    const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
+    const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
     
     expect(newHistory).toHaveLength(1);
     expect(newHistory[0].type).toBe('assistant');
@@ -61,8 +61,8 @@ describe('help command', () => {
   it('includes command names in output', () => {
     helpCommand.execute(mockContext);
     
-    const setHistoryFn = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-    const newHistory = setHistoryFn([]);
+    const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
+    const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
     
     const text = newHistory[0].text;
     expect(text).toContain('/help');
@@ -73,8 +73,8 @@ describe('help command', () => {
   it('includes command descriptions', () => {
     helpCommand.execute(mockContext);
     
-    const setHistoryFn = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-    const newHistory = setHistoryFn([]);
+    const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
+    const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
     
     const text = newHistory[0].text;
     expect(text).toContain('Show available commands');
@@ -85,8 +85,8 @@ describe('help command', () => {
   it('includes command aliases', () => {
     helpCommand.execute(mockContext);
     
-    const setHistoryFn = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-    const newHistory = setHistoryFn([]);
+    const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
+    const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
     
     const text = newHistory[0].text;
     expect(text).toContain('aliases:');
@@ -101,8 +101,8 @@ describe('help command', () => {
     
     expect(mockGetId).toHaveBeenCalled();
     
-    const setHistoryFn = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-    const newHistory = setHistoryFn([]);
+    const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
+    const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall([]) : setHistoryCall;
     
     expect(newHistory[0].id).toBe(42);
   });
@@ -114,8 +114,8 @@ describe('help command', () => {
     
     helpCommand.execute(mockContext);
     
-    const setHistoryFn = vi.mocked(mockContext.setHistory).mock.calls[0][0];
-    const newHistory = setHistoryFn(existingHistory);
+    const setHistoryCall = vi.mocked(mockContext.setHistory).mock.calls[0][0];
+    const newHistory = typeof setHistoryCall === 'function' ? setHistoryCall(existingHistory) : setHistoryCall;
     
     expect(newHistory).toHaveLength(2);
     expect(newHistory[0]).toEqual(existingHistory[0]);
