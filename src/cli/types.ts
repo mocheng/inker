@@ -1,4 +1,4 @@
-export type MessageType = 'user' | 'assistant' | 'error' | 'shell';
+export type MessageType = 'user' | 'assistant' | 'error' | 'shell' | 'system';
 
 export type Message = {
   id: number;

@@ -8,6 +8,19 @@ import { convertToLLMMessages } from '../model/context.js';
 import { loadInputHistory, saveInputHistory } from './inputHistory.js';
 import { getContextFiles } from '../model/contextManager.js';
 import { commandRegistry } from './commands/index.js';
+import { filterCommands } from './appUtils.js';
+import {
+  updateStreamingMessage as updateStreamingMsg,
+  handleErrorMessage as handleErrorMsg,
+  addUserMessage,
+  addAssistantPlaceholder,
+  addShellMessage,
+  addErrorMessage,
+  isBashCommand,
+  extractBashCommand,
+  getCompletedHistory,
+  getStreamingItem,
+} from './messageUtils.js';
 import type { Message } from './types.js';
 
 const INKER_ASCII_ART = `
@@ -42,11 +55,8 @@ export default function App() {
 
   // Filter commands based on input prefix
   const getFilteredCommands = useCallback((inputValue: string): string[] => {
-    if (!inputValue.startsWith('/')) {
-      return [];
-    }
     const allCommands = commandRegistry.getAllCommandsWithAliases();
-    return allCommands.map(cmd => `/${cmd}`).filter(cmd => cmd.startsWith(inputValue));
+    return filterCommands(inputValue, allCommands);
   }, []);
 
   useEffect(() => {
@@ -154,13 +164,7 @@ export default function App() {
   }, []);
 
   const updateStreamingMessage = useCallback((responseId: number, text: string) => {
-    setHistory(prev => 
-      prev.map(item => 
-        item.id === responseId 
-          ? { ...item, text }
-          : item
-      )
-    );
+    setHistory(prev => updateStreamingMsg(prev, responseId, text));
   }, []);
 
   const shouldUpdateStreaming = useCallback((fullText: string): boolean => {
@@ -188,24 +192,7 @@ export default function App() {
 
   const handleError = useCallback((responseId: number, error: unknown) => {
     const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-    
-    setHistory(prev => {
-      const streamingItem = prev.find(item => item.id === responseId);
-      const hasPartialContent = streamingItem && streamingItem.text.trim().length > 0;
-      
-      if (hasPartialContent) {
-        // Keep partial content and append error as a new message
-        return [
-          ...prev,
-          { id: getNextMessageId(), type: 'error', text: `Error: ${errorMsg}` }
-        ];
-      } else {
-        // No partial content, replace empty response with error
-        return prev
-          .filter(item => item.id !== responseId)
-          .concat({ id: getNextMessageId(), type: 'error', text: `Error: ${errorMsg}` });
-      }
-    });
+    setHistory(prev => handleErrorMsg(prev, responseId, errorMsg, getNextMessageId));
   }, [getNextMessageId]);
 
   const handleSubmit = useCallback(async () => {
@@ -245,21 +232,21 @@ export default function App() {
     setInput('');
     setShowHints(false);
     setSelectedHintIndex(0);
-    setHistory(prev => [...prev, { id: getNextMessageId(), type: 'user', text: userMessage }]);
+    setHistory(prev => addUserMessage(prev, getNextMessageId(), userMessage));
     setIsLoading(true);
 
     // Handle bash command execution
-    if (userMessage.startsWith('!')) {
-      const command = userMessage.slice(1).trim();
+    if (isBashCommand(userMessage)) {
+      const command = extractBashCommand(userMessage);
       const responseId = getNextMessageId();
       
       try {
         const { execSync } = await import('child_process');
         const output = execSync(command, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 });
-        setHistory(prev => [...prev, { id: responseId, type: 'shell', text: output }]);
+        setHistory(prev => addShellMessage(prev, responseId, output));
       } catch (error: any) {
         const errorMsg = error.stderr || error.message || 'Command execution failed';
-        setHistory(prev => [...prev, { id: responseId, type: 'error', text: errorMsg }]);
+        setHistory(prev => addErrorMessage(prev, responseId, errorMsg));
       }
       setIsLoading(false);
       return;
@@ -268,7 +255,7 @@ export default function App() {
     // Add placeholder for streaming response
     const responseId = getNextMessageId();
     setStreamingId(responseId);
-    setHistory(prev => [...prev, { id: responseId, type: 'assistant', text: '' }]);
+    setHistory(prev => addAssistantPlaceholder(prev, responseId));
 
     abortControllerRef.current = new AbortController();
 
@@ -294,8 +281,8 @@ export default function App() {
     }
   }, [input, isLoading, history, getNextMessageId, handleStreamingChunk, updateStreamingMessage, handleError, exit]);
 
-  const completedHistory = history.filter(item => item.id !== streamingId);
-  const streamingItem = history.find(item => item.id === streamingId);
+  const completedHistory = getCompletedHistory(history, streamingId);
+  const streamingItem = getStreamingItem(history, streamingId);
   const filteredCommands = getFilteredCommands(input);
   const hasHints = showHints && filteredCommands.length > 0;
 
