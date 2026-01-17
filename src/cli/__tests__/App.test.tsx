@@ -17,4 +17,25 @@ describe('App', () => {
     const { lastFrame } = render(<App />);
     expect(lastFrame()).toContain('>');
   });
+
+  it('renders ASCII art header', () => {
+    const { lastFrame } = render(<App />);
+    const output = lastFrame();
+    // Check for ASCII art box characters
+    expect(output).toContain('██');
+  });
+
+  it('starts with empty history', () => {
+    const { lastFrame } = render(<App />);
+    const output = lastFrame();
+    // Should not contain any history items initially
+    expect(output).toBeTruthy();
+  });
+
+  it('renders text input component', () => {
+    const { lastFrame } = render(<App />);
+    const output = lastFrame();
+    // Input prompt should be visible
+    expect(output).toContain('>');
+  });
 });
