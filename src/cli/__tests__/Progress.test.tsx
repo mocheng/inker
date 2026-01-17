@@ -8,5 +8,18 @@ describe('Progress', () => {
     const { lastFrame } = render(<Progress />);
     const output = lastFrame();
     expect(output).toBeTruthy();
+    expect(output).toContain('⠋');
+  });
+
+  it('shows thinking message', () => {
+    const { lastFrame } = render(<Progress />);
+    const output = lastFrame();
+    expect(output).toContain('Thinking');
+  });
+
+  it('shows elapsed time format', () => {
+    const { lastFrame } = render(<Progress />);
+    const output = lastFrame();
+    expect(output).toMatch(/\d+s/); // Should contain time in seconds
   });
 });
