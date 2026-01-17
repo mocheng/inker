@@ -21,18 +21,14 @@ import {
   getCompletedHistory,
   getStreamingItem,
 } from './messageUtils.js';
+import {
+  INKER_ASCII_ART,
+  MIN_TERMINAL_MARGIN,
+  DEFAULT_TERMINAL_HEIGHT,
+  HINT_SELECTION_DELAY,
+  MAX_EXEC_BUFFER,
+} from './constants.js';
 import type { Message } from './types.js';
-
-const INKER_ASCII_ART = `
-██╗███╗   ██╗██╗  ██╗███████╗██████╗ 
-██║████╗  ██║██║ ██╔╝██╔════╝██╔══██╗
-██║██╔██╗ ██║█████╔╝ █████╗  ██████╔╝
-██║██║╚██╗██║██╔═██╗ ██╔══╝  ██╔══██╗
-██║██║ ╚████║██║  ██╗███████╗██║  ██║
-╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
-`;
-
-const MIN_TERMINAL_MARGIN = 7;
 
 export default function App() {
   const [history, setHistory] = useState<Message[]>([]);
@@ -51,7 +47,7 @@ export default function App() {
   const { stdout } = useStdout();
   const { stdin, setRawMode } = useStdin();
   const { exit } = useApp();
-  const terminalHeight = stdout?.rows || 24;
+  const terminalHeight = stdout?.rows || DEFAULT_TERMINAL_HEIGHT;
 
   // Filter commands based on input prefix
   const getFilteredCommands = useCallback((inputValue: string): string[] => {
@@ -115,7 +111,7 @@ export default function App() {
       // Reset the flag after user can press Enter again
       setTimeout(() => {
         justSelectedHintRef.current = false;
-      }, 100);
+      }, HINT_SELECTION_DELAY);
     }
   }, [selectedHintIndex]);
 
@@ -242,7 +238,7 @@ export default function App() {
       
       try {
         const { execSync } = await import('child_process');
-        const output = execSync(command, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 });
+        const output = execSync(command, { encoding: 'utf-8', maxBuffer: MAX_EXEC_BUFFER });
         setHistory(prev => addShellMessage(prev, responseId, output));
       } catch (error: any) {
         const errorMsg = error.stderr || error.message || 'Command execution failed';
