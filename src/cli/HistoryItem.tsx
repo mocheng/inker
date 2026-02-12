@@ -50,6 +50,8 @@ export default function HistoryItem({ type, text }: HistoryItemProps) {
     return <Text color="red">{text}</Text>;
   } else if (type === 'shell') {
     return <Text color="yellow">{text}</Text>;
+  } else if (type === 'system') {
+    return <Text color="cyan">{text}</Text>;
   } else {
     return <Text>{parseMarkdown(text)}</Text>;
   }

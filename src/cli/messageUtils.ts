@@ -86,6 +86,17 @@ export function addErrorMessage(
 }
 
 /**
+ * Add system message to history
+ */
+export function addSystemMessage(
+  history: Message[],
+  messageId: number,
+  text: string
+): Message[] {
+  return [...history, { id: messageId, type: 'system', text }];
+}
+
+/**
  * Check if input is a bash command
  */
 export function isBashCommand(input: string): boolean {
