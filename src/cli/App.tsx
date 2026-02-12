@@ -28,6 +28,8 @@ import {
   HINT_SELECTION_DELAY,
   MAX_EXEC_BUFFER,
 } from './constants.js';
+import { validateCommand, getSafetyConfig, setSafetyConfig } from './security.js';
+import { formatErrorMessage } from './errors/errorHandler.js';
 import type { Message } from './types.js';
 
 export default function App() {
@@ -40,6 +42,7 @@ export default function App() {
   const [inputKey, setInputKey] = useState(0);
   const [showHints, setShowHints] = useState(false);
   const [selectedHintIndex, setSelectedHintIndex] = useState(0);
+  const [pendingBashCommand, setPendingBashCommand] = useState<string | null>(null);
   const justSelectedHintRef = useRef<boolean>(false);
   const nextMessageIdRef = useRef<number>(0);
   const streamingRef = useRef<React.ElementRef<typeof Box> | null>(null);
@@ -116,6 +119,36 @@ export default function App() {
   }, [selectedHintIndex]);
 
   useInput((_input, key) => {
+    // Handle confirmation prompt for dangerous commands
+    if (pendingBashCommand) {
+      const normalized = _input.toLowerCase().trim();
+      if (normalized === 'y' || normalized === 'yes') {
+        // Execute the confirmed command
+        executeBashCommandInternal(pendingBashCommand);
+        setPendingBashCommand(null);
+        setInput('');
+        return;
+      } else if (normalized === 'n' || normalized === 'no') {
+        // Cancel the command
+        const id = nextMessageIdRef.current++;
+        setHistory(prev => [...prev, { id, type: 'error', text: 'Command cancelled' }]);
+        setPendingBashCommand(null);
+        setInput('');
+        setIsLoading(false);
+        return;
+      } else if (key.return) {
+        // Enter on empty input = 'no'
+        const id = nextMessageIdRef.current++;
+        setHistory(prev => [...prev, { id, type: 'error', text: 'Command cancelled' }]);
+        setPendingBashCommand(null);
+        setInput('');
+        setIsLoading(false);
+        return;
+      }
+      // Ignore other keys during confirmation
+      return;
+    }
+
     // Handle Ctrl+C to abort LLM operation or exit app
     if (key.ctrl && _input === 'c') {
       if (abortControllerRef.current) {
@@ -159,6 +192,26 @@ export default function App() {
     return nextMessageIdRef.current++;
   }, []);
 
+  /**
+   * Execute bash command (internal, after confirmation if needed)
+   */
+  const executeBashCommandInternal = useCallback(async (command: string) => {
+    const responseId = getNextMessageId();
+    
+    try {
+      const { execSync } = await import('child_process');
+      const output = execSync(command, { encoding: 'utf-8', maxBuffer: MAX_EXEC_BUFFER });
+      setHistory(prev => addShellMessage(prev, responseId, output));
+    } catch (error: any) {
+      const errorMsg = error.stderr || error.message || 'Command execution failed';
+      setHistory(prev => addErrorMessage(prev, responseId, errorMsg));
+    }
+    setIsLoading(false);
+  }, [getNextMessageId]);
+
+  /**
+   * Update a streaming message in history
+   */
   const updateStreamingMessage = useCallback((responseId: number, text: string) => {
     setHistory(prev => updateStreamingMsg(prev, responseId, text));
   }, []);
@@ -187,7 +240,8 @@ export default function App() {
   }, [shouldUpdateStreaming, updateStreamingMessage]);
 
   const handleError = useCallback((responseId: number, error: unknown) => {
-    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    // Use unified error handling for user-friendly messages
+    const errorMsg = formatErrorMessage(error);
     setHistory(prev => handleErrorMsg(prev, responseId, errorMsg, getNextMessageId));
   }, [getNextMessageId]);
 
@@ -234,17 +288,23 @@ export default function App() {
     // Handle bash command execution
     if (isBashCommand(userMessage)) {
       const command = extractBashCommand(userMessage);
-      const responseId = getNextMessageId();
       
-      try {
-        const { execSync } = await import('child_process');
-        const output = execSync(command, { encoding: 'utf-8', maxBuffer: MAX_EXEC_BUFFER });
-        setHistory(prev => addShellMessage(prev, responseId, output));
-      } catch (error: any) {
-        const errorMsg = error.stderr || error.message || 'Command execution failed';
-        setHistory(prev => addErrorMessage(prev, responseId, errorMsg));
+      // Check if command is dangerous
+      const { safe, reason } = validateCommand(command);
+      if (!safe && getSafetyConfig().confirmDangerousCommands) {
+        // Store pending command and show warning
+        setPendingBashCommand(command);
+        const id = getNextMessageId();
+        setHistory(prev => [
+          ...prev,
+          { id, type: 'error', text: reason || '⚠️  Potentially dangerous command' },
+          { id: id + 1, type: 'system', text: `→ Command: ${command}\nConfirm to proceed? (y/n)` }
+        ]);
+        return;
       }
-      setIsLoading(false);
+      
+      // Safe command - execute directly
+      await executeBashCommandInternal(command);
       return;
     }
 
@@ -275,7 +335,7 @@ export default function App() {
     } finally {
       abortControllerRef.current = null;
     }
-  }, [input, isLoading, history, getNextMessageId, handleStreamingChunk, updateStreamingMessage, handleError, exit]);
+  }, [input, isLoading, history, getNextMessageId, handleStreamingChunk, updateStreamingMessage, handleError, exit, executeBashCommandInternal]);
 
   const completedHistory = getCompletedHistory(history, streamingId);
   const streamingItem = getStreamingItem(history, streamingId);
@@ -304,6 +364,12 @@ export default function App() {
         </Box>
       )}
       {isLoading && <Progress key="progress" />}
+      {pendingBashCommand && (
+        <Box marginY={1}>
+          <Text color="yellow" bold>⚠️  Confirm Command Execution</Text>
+          <Text dimColor> Type 'y' or 'yes' to confirm, 'n' or 'no' to cancel</Text>
+        </Box>
+      )}
       {hasHints && (
         <Box paddingX={1} marginBottom={1} flexDirection="column">
           {filteredCommands.map((command, index) => (
